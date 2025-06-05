@@ -11,3 +11,31 @@ easy-pdf
 ========
 
 Easily create PDF documents.
+
+### Example
+
+This example shows how to use the `easy-pdf` crate.
+
+```rust
+use easy_pdf::hello_world;
+
+fn main() {
+    env_logger::init();
+    if let Err(e) = example() {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }   
+}
+
+fn example() -> Result<(), Box<dyn std::error::Error>> {
+    hello_world()
+}
+```
+
+The above example can be run like so:
+
+```
+$ git clone https://github.com/wyzzarz/easy-pdf.git
+$ cd easy-pdf
+$ cargo run --example easy-pdf-example
+```
