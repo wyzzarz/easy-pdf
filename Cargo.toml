@@ -5,5 +5,22 @@
 name = "easy-pdf"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
+authors = ["Warner Zee <warner@zoynk.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/wyzzarz/easy-pdf"
+readme = "README.md"
+description = "Easily create PDF documents."
+# up to 5 keywords having at most 20 characters each
+keywords = ["pdf", "text", "layout"]
+# up to 5 categories from https://crates.io/category_slugs
+categories = ["text-processing"]
+include = [
+    "/src/**",
+    "/Cargo.toml",
+    "/CHANGELOG.md",
+    "/LICENSE-*",
+    "/README.md",
+]
 
 [dependencies]
