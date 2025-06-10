@@ -1,11 +1,13 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+pub mod documents;
 pub mod object_id;
 pub mod objects;
 
 use std::fmt;
 use std::str::FromStr;
+pub use documents::DocumentId;
 pub use object_id::ObjectId;
 
 /// Object types.
@@ -48,7 +50,7 @@ impl FromStr for ObjectType {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     /// The pdf document.
-    Document { id: ObjectId },
+    Document { id: ObjectId, document_id: DocumentId },
     /// Primary dictionary of all objects in the pdf document.  See PDF 1.7 - 7.7.2.
     Catalog { id: ObjectId, pages: Option<ObjectId> },
     /// Collection of page(s) within the pages tree of the pdf document.  See PDF 1.7 - 7.7.3. 
@@ -75,7 +77,7 @@ impl IndirectObject for Object {
     /// However `Object` variants should be created directly (e.g., `Object::Catalog { ... }`).
     fn new(_id: ObjectId) -> Self {
         // document is not used as a PDF object and is cached at 0
-        Object::Document { id: ObjectId::new(0, 0) }
+        Object::Document { id: ObjectId::new(0, 0), document_id: 0 }
     }
 
     fn get_id(&self) -> ObjectId {
