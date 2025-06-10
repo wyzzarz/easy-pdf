@@ -31,6 +31,7 @@ flate2 = "1.1.2"
 image = "0.25.6"
 log = "0.4.27"
 maplit = "1.0.2"
+rand = "0.9.1"
 regex = "1.11.1"
 rust-embed = { version = "8.7.2", features = ["include-exclude", "interpolate-folder-path"] }
 rust_decimal = "1.37.2"
