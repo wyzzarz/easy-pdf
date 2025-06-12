@@ -4,8 +4,9 @@
 use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
-use super::{Object, ObjectId, ObjectType};
+use super::{IndirectObject, Object, ObjectId, ObjectType};
 use super::objects::Objects;
+use crate::catalog::Catalog;
 
 /// Document identifier.
 pub type DocumentId = u16;
@@ -48,9 +49,22 @@ impl Documents {
     fn register_document(&mut self) -> DocumentId {
         let new_id = self.new_document_id();
         let new_doc = Object::Document { id: ObjectId::from((0, 0)), document_id: new_id };
+
+        // create new objects array for the new document
         let mut objects = Objects::new();
+        
+        // add this document as the first object
         objects.insert(new_doc);
+
+        // add a catalog for this document
+        let id = objects.new_object_id();
+        let catalog = Catalog::new(id);
+        objects.insert(Object::Catalog(catalog.clone()));
+
+        // register the new document and its objects
         self.documents.insert(new_id, objects);
+
+        // return the new document id
         new_id
     }
 
@@ -73,7 +87,7 @@ pub fn register_document() -> DocumentId {
 
 /// Gets the document.
 pub fn get_document(document_id: DocumentId) -> Option<Object> {
-    DOCUMENTS.lock().unwrap().get(&document_id)
+    DOCUMENTS.lock().unwrap().get(document_id)
         .and_then(|objects| objects.by_type(ObjectType::Document).first().cloned())
 }
 
@@ -108,6 +122,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::Catalog;
+    use crate::object::IndirectObject;
 
     #[test]
     fn test_new_document_id() {
@@ -143,14 +159,15 @@ mod tests {
         let mut documents = Documents::new();
         let doc_id = documents.register_document();
         let objects = documents.get(doc_id).unwrap();
-        assert_eq!(objects.len(), 1);
+        assert_eq!(objects.len(), 2);
         let new_id = objects.new_object_id();
-        let new_object = Object::Catalog { id: new_id, pages: None };
+        let new_catalog = Catalog::new(new_id);
+        let new_object = Object::Catalog(new_catalog);
         let mut_objects = documents.get_mut(doc_id).unwrap();
         mut_objects.insert(new_object);
-        assert_eq!(mut_objects.len(), 2);
-        assert_eq!(objects.len(), 1);  // objects is immutable
-        assert_eq!(documents.get(doc_id).unwrap().len(), 2);
+        assert_eq!(mut_objects.len(), 3);
+        assert_eq!(objects.len(), 2);  // objects is immutable
+        assert_eq!(documents.get(doc_id).unwrap().len(), 3);
     }
 
     #[test]
@@ -158,19 +175,20 @@ mod tests {
         // start with a new document
         let doc_id = register_document();
 
-        // test objects
-        assert_eq!(get(doc_id).unwrap().len(), 1);
+        // test objects (includes document and catalog)
+        assert_eq!(get(doc_id).unwrap().len(), 2);
 
         // insert a new object
         let res = mutate(doc_id, |objects| {
             let new_id = objects.new_object_id();
-            let new_object = Object::Catalog { id: new_id, pages: None };
+            let new_catalog = Catalog::new(new_id);
+            let new_object = Object::Catalog(new_catalog);
             objects.insert(new_object)
         }).unwrap();
         assert_eq!(res, None);
 
         // test objects
-        assert_eq!(get(doc_id).unwrap().len(), 2);
+        assert_eq!(get(doc_id).unwrap().len(), 3);
     }
 
 }
