@@ -9,6 +9,7 @@ use std::fmt;
 use std::str::FromStr;
 pub use documents::DocumentId;
 pub use object_id::ObjectId;
+use crate::catalog::Catalog;
 
 /// Object types.
 #[derive(Debug, Clone, PartialEq)]
@@ -52,7 +53,7 @@ pub enum Object {
     /// The pdf document.
     Document { id: ObjectId, document_id: DocumentId },
     /// Primary dictionary of all objects in the pdf document.  See PDF 1.7 - 7.7.2.
-    Catalog { id: ObjectId, pages: Option<ObjectId> },
+    Catalog(Catalog),
     /// Collection of page(s) within the pages tree of the pdf document.  See PDF 1.7 - 7.7.3. 
     Pages { id: ObjectId, kids: Vec<ObjectId> },
 }
@@ -74,7 +75,7 @@ impl IndirectObject for Object {
     /// For the `Object` enum, this method creates a default `Object::Document` variant
     /// with the given `id`.
     /// 
-    /// However `Object` variants should be created directly (e.g., `Object::Catalog { ... }`).
+    /// However `Object` variants should be created directly (e.g., `Object::Catalog(new_catalog)`).
     fn new(_id: ObjectId) -> Self {
         // document is not used as a PDF object and is cached at 0
         Object::Document { id: ObjectId::new(0, 0), document_id: 0 }
@@ -83,7 +84,7 @@ impl IndirectObject for Object {
     fn get_id(&self) -> ObjectId {
         match self {
             Object::Document { id, .. } => *id,
-            Object::Catalog { id, .. } => *id,
+            Object::Catalog(catalog) => catalog.get_id(),
             Object::Pages { id, .. } => *id,
         }
     }
@@ -91,7 +92,7 @@ impl IndirectObject for Object {
     fn set_id(&mut self, value: ObjectId) {
         match self {
             Object::Document { id, .. } => *id = value,
-            Object::Catalog { id, .. } => *id = value,
+            Object::Catalog(catalog) => catalog.set_id(value),
             Object::Pages { id, .. } => *id = value,
         }
     }
@@ -99,7 +100,7 @@ impl IndirectObject for Object {
     fn get_type(&self) -> ObjectType {
         match self {
             Object::Document { .. } => ObjectType::Document,
-            Object::Catalog { .. } => ObjectType::Catalog,
+            Object::Catalog(_) => ObjectType::Catalog,
             Object::Pages { .. } => ObjectType::Pages,
         }
     }
@@ -120,7 +121,8 @@ mod tests {
         assert_eq!(object.get_type(), ObjectType::Document);
 
         // test catalog
-        let object = Object::Catalog { id: object_id, pages: None };
+        let catalog = Catalog::new(object_id);
+        let object = Object::Catalog(catalog);
         assert_eq!(object.get_id(), object_id);
         assert_eq!(object.get_type(), ObjectType::Catalog);
 

@@ -72,6 +72,7 @@ impl Objects {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::Catalog;
 
     #[test]
     fn test_objects() {
@@ -89,10 +90,11 @@ mod tests {
 
         // test catalog
         let new_id = objects.new_object_id();
-        let catalog = Object::Catalog { id: new_id, pages: None };
-        objects.insert(catalog.clone());
+        let catalog = Catalog::new(new_id);
+        let object = Object::Catalog(catalog);
+        objects.insert(object.clone());
         assert_eq!(objects.len(), 2);
-        assert_eq!(objects.get(&new_id), Some(&catalog));
+        assert_eq!(objects.get(&new_id), Some(&object));
 
         // test next id
         assert_eq!(objects.new_object_id(), ObjectId::new(2, 0));

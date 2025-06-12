@@ -38,6 +38,7 @@ $ cargo run --example easy-pdf-rs-example
 
 */
 
+pub mod catalog;
 pub mod helpers;
 pub mod object;
 pub mod pdf_object;
