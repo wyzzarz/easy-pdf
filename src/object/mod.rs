@@ -10,6 +10,7 @@ use std::str::FromStr;
 pub use documents::DocumentId;
 pub use object_id::ObjectId;
 use crate::catalog::Catalog;
+use crate::document::Document;
 
 /// Object types.
 #[derive(Debug, Clone, PartialEq)]
@@ -51,7 +52,7 @@ impl FromStr for ObjectType {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     /// The pdf document.
-    Document { id: ObjectId, document_id: DocumentId },
+    Document(Document),
     /// Primary dictionary of all objects in the pdf document.  See PDF 1.7 - 7.7.2.
     Catalog(Catalog),
     /// Collection of page(s) within the pages tree of the pdf document.  See PDF 1.7 - 7.7.3. 
@@ -78,12 +79,12 @@ impl IndirectObject for Object {
     /// However `Object` variants should be created directly (e.g., `Object::Catalog(new_catalog)`).
     fn new(_id: ObjectId) -> Self {
         // document is not used as a PDF object and is cached at 0
-        Object::Document { id: ObjectId::new(0, 0), document_id: 0 }
+        Object::Document(Document::new(ObjectId::new(0, 0)))
     }
 
     fn get_id(&self) -> ObjectId {
         match self {
-            Object::Document { id, .. } => *id,
+            Object::Document(document) => document.get_id(),
             Object::Catalog(catalog) => catalog.get_id(),
             Object::Pages { id, .. } => *id,
         }
@@ -91,7 +92,7 @@ impl IndirectObject for Object {
 
     fn set_id(&mut self, value: ObjectId) {
         match self {
-            Object::Document { id, .. } => *id = value,
+            Object::Document(document) => document.set_id(value),
             Object::Catalog(catalog) => catalog.set_id(value),
             Object::Pages { id, .. } => *id = value,
         }
@@ -99,7 +100,7 @@ impl IndirectObject for Object {
 
     fn get_type(&self) -> ObjectType {
         match self {
-            Object::Document { .. } => ObjectType::Document,
+            Object::Document(_) => ObjectType::Document,
             Object::Catalog(_) => ObjectType::Catalog,
             Object::Pages { .. } => ObjectType::Pages,
         }
