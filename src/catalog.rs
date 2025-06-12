@@ -98,6 +98,7 @@ impl Catalog {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::document::Document;
 
     #[test]
     fn test_from_object() {
@@ -107,7 +108,7 @@ mod tests {
         let catalog1 = Catalog::try_from(object.clone()).unwrap();
         assert_eq!(catalog, catalog1);
 
-        let object2 = Object::Document { id: id, document_id: 123 };
+        let object2 = Object::Document(Document::new_with_id(123));
         let catalog2 = Catalog::try_from(object2.clone());
         assert!(catalog2.is_err());
     }

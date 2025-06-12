@@ -7,6 +7,7 @@ use std::sync::{LazyLock, Mutex};
 use super::{IndirectObject, Object, ObjectId, ObjectType};
 use super::objects::Objects;
 use crate::catalog::Catalog;
+use crate::document::Document;
 
 /// Document identifier.
 pub type DocumentId = u16;
@@ -48,7 +49,7 @@ impl Documents {
     /// Registers a new document.
     fn register_document(&mut self) -> DocumentId {
         let new_id = self.new_document_id();
-        let new_doc = Object::Document { id: ObjectId::from((0, 0)), document_id: new_id };
+        let new_doc = Object::Document(Document::new_with_id(new_id));
 
         // create new objects array for the new document
         let mut objects = Objects::new();
@@ -143,15 +144,8 @@ mod tests {
     #[test]
     fn test_get_document() {
         let doc_id = register_document();
-        let document = get_document(doc_id);
-        assert!(document.is_some());
-        match document.unwrap() {
-            Object::Document { id, document_id } => {
-                assert_eq!(document_id, doc_id);
-                assert_eq!(id, ObjectId::new(0, 0));
-            }
-            _ => panic!("Unexpected object type"),
-        }
+        let document = Document::try_from(get_document(doc_id).unwrap()).unwrap();
+        assert_eq!(document.document_id(), doc_id);
     }
 
     #[test]
