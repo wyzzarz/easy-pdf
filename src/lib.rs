@@ -42,6 +42,7 @@ pub mod catalog;
 pub mod document;
 pub mod helpers;
 pub mod object;
+pub mod page;
 pub mod pages;
 pub mod pdf_object;
 pub mod resources;

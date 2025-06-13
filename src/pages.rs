@@ -68,6 +68,10 @@ impl Pages {
                 self.count += 1;
                 Ok(())
             },
+            Object::Page(page) => {
+                self.kids.push(page.get_id());
+                Ok(())
+            },
             _ => Err(format!("Child '{}' is not Pages or Page.", child.get_type()).into()),
         }
     }
@@ -87,6 +91,7 @@ impl Pages {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::page::Page;
 
     #[test]
     fn test_from_object() {
@@ -109,6 +114,12 @@ mod tests {
         pages.add_child(pages1.clone()).unwrap();
         assert_eq!(pages.kids().len(), 1);
         assert_eq!(pages.kids()[0], id1);
+
+        // test adding page
+        let id2 = ObjectId::new(7, 8);
+        pages.add_child(Object::Page(Page::new(id2))).unwrap();
+        assert_eq!(pages.kids().len(), 2);
+        assert_eq!(pages.kids()[1], id2);
 
         // test adding invalid
         assert!(pages.add_child(Object::new(ObjectId::new(5, 6))).is_err());
