@@ -124,7 +124,14 @@ mod tests {
         // test with document
         let document_id = documents::register_document();
         let catalog = Catalog::get_catalog(document_id);
-        assert!(catalog.ok().is_some());
+        assert!(catalog.as_ref().ok().is_some());
+
+        // test page tree
+        let catalog = catalog.unwrap().unwrap();
+        assert!(catalog.pages().is_some());
+        let pages_id = catalog.pages().unwrap();
+        let pages = documents::get_object(document_id, &pages_id);
+        assert_eq!(pages.unwrap().get_type(), ObjectType::Pages);
     }
 
     #[test]

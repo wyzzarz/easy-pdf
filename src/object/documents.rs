@@ -8,6 +8,7 @@ use super::{IndirectObject, Object, ObjectId, ObjectType};
 use super::objects::Objects;
 use crate::catalog::Catalog;
 use crate::document::Document;
+use crate::pages::Pages;
 
 /// Document identifier.
 pub type DocumentId = u16;
@@ -57,9 +58,15 @@ impl Documents {
         // add this document as the first object
         objects.insert(new_doc);
 
+        // add page tree for this document
+        let pages_id = objects.new_object_id();
+        let pages = Pages::new(pages_id);
+        objects.insert(Object::Pages(pages.clone()));
+
         // add a catalog for this document
         let id = objects.new_object_id();
-        let catalog = Catalog::new(id);
+        let mut catalog = Catalog::new(id);
+        catalog.set_pages(Some(pages_id));
         objects.insert(Object::Catalog(catalog.clone()));
 
         // register the new document and its objects
@@ -153,15 +160,15 @@ mod tests {
         let mut documents = Documents::new();
         let doc_id = documents.register_document();
         let objects = documents.get(doc_id).unwrap();
-        assert_eq!(objects.len(), 2);
+        assert_eq!(objects.len(), 3);
         let new_id = objects.new_object_id();
         let new_catalog = Catalog::new(new_id);
         let new_object = Object::Catalog(new_catalog);
         let mut_objects = documents.get_mut(doc_id).unwrap();
         mut_objects.insert(new_object);
-        assert_eq!(mut_objects.len(), 3);
-        assert_eq!(objects.len(), 2);  // objects is immutable
-        assert_eq!(documents.get(doc_id).unwrap().len(), 3);
+        assert_eq!(mut_objects.len(), 4);
+        assert_eq!(objects.len(), 3);  // objects is immutable
+        assert_eq!(documents.get(doc_id).unwrap().len(), 4);
     }
 
     #[test]
@@ -170,7 +177,7 @@ mod tests {
         let doc_id = register_document();
 
         // test objects (includes document and catalog)
-        assert_eq!(get(doc_id).unwrap().len(), 2);
+        assert_eq!(get(doc_id).unwrap().len(), 3);
 
         // insert a new object
         let res = mutate(doc_id, |objects| {
@@ -182,7 +189,7 @@ mod tests {
         assert_eq!(res, None);
 
         // test objects
-        assert_eq!(get(doc_id).unwrap().len(), 3);
+        assert_eq!(get(doc_id).unwrap().len(), 4);
     }
 
 }
