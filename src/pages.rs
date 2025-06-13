@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use crate::object::documents::{self, DocumentId};
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
 
 /// Collection of page(s) within the pages tree of the pdf document.  See PDF 1.7 - 7.7.3. 
@@ -69,6 +70,16 @@ impl Pages {
             },
             _ => Err(format!("Child '{}' is not Pages or Page.", child.get_type()).into()),
         }
+    }
+
+    /// Gets the page tree for the specified document.
+    /// 
+    /// Returns `None` if the document does not exist or `Pages` does not exist for the document.
+    pub fn get_page_tree(document_id: DocumentId) -> Result<Option<Pages>, Box<dyn std::error::Error>> {
+        Ok(documents::get(document_id)
+            .and_then(|objects| {
+                objects.page_tree()
+            }))
     }
 
 }
