@@ -11,6 +11,7 @@ pub use documents::DocumentId;
 pub use object_id::ObjectId;
 use crate::catalog::Catalog;
 use crate::document::Document;
+use crate::page::Page;
 use crate::pages::Pages;
 
 /// Object types.
@@ -19,6 +20,7 @@ pub enum ObjectType {
     Document,
     Catalog,
     Pages,
+    Page,
 }
 
 impl fmt::Display for ObjectType {
@@ -27,6 +29,7 @@ impl fmt::Display for ObjectType {
             ObjectType::Document => write!(f, "Document"),
             ObjectType::Catalog => write!(f, "Catalog"),
             ObjectType::Pages => write!(f, "Pages"),
+            ObjectType::Page => write!(f, "Page"),
         }
     }
 }
@@ -42,6 +45,7 @@ impl FromStr for ObjectType {
             "Document" => Ok(ObjectType::Document),
             "Catalog" => Ok(ObjectType::Catalog),
             "Pages" => Ok(ObjectType::Pages),
+            "Page" => Ok(ObjectType::Page),
             _ => Err(ParseObjectTypeError),
         }
     }
@@ -58,6 +62,8 @@ pub enum Object {
     Catalog(Catalog),
     /// Collection of page(s) within the pages tree of the pdf document.  See PDF 1.7 - 7.7.3. 
     Pages(Pages),
+    //// A page displayed in the pdf document.  See PDF 1.7 - 7.7.3.3
+    Page(Page),
 }
 
 /// A trait shared by all indirect (referenced) objects.
@@ -88,6 +94,7 @@ impl IndirectObject for Object {
             Object::Document(document) => document.get_id(),
             Object::Catalog(catalog) => catalog.get_id(),
             Object::Pages(pages) => pages.get_id(),
+            Object::Page(page) => page.get_id(),
         }
     }
 
@@ -96,6 +103,7 @@ impl IndirectObject for Object {
             Object::Document(document) => document.set_id(value),
             Object::Catalog(catalog) => catalog.set_id(value),
             Object::Pages(pages) => pages.set_id(value),
+            Object::Page(page) => page.set_id(value),
         }
     }
 
@@ -104,6 +112,7 @@ impl IndirectObject for Object {
             Object::Document(_) => ObjectType::Document,
             Object::Catalog(_) => ObjectType::Catalog,
             Object::Pages(_) => ObjectType::Pages,
+            Object::Page(_) => ObjectType::Page,
         }
     }
 
@@ -134,6 +143,14 @@ mod tests {
         let mut object = Object::Pages(pages);
         assert_eq!(object.get_id(), object_id);
         assert_eq!(object.get_type(), ObjectType::Pages);
+        object.set_id(new_object_id);
+        assert_eq!(object.get_id(), new_object_id);
+
+        // test page
+        let page = Page::new(object_id);
+        let mut object = Object::Page(page);
+        assert_eq!(object.get_id(), object_id);
+        assert_eq!(object.get_type(), ObjectType::Page);
         object.set_id(new_object_id);
         assert_eq!(object.get_id(), new_object_id);
     }
