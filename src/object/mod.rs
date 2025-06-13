@@ -11,6 +11,7 @@ pub use documents::DocumentId;
 pub use object_id::ObjectId;
 use crate::catalog::Catalog;
 use crate::document::Document;
+use crate::pages::Pages;
 
 /// Object types.
 #[derive(Debug, Clone, PartialEq)]
@@ -56,7 +57,7 @@ pub enum Object {
     /// Primary dictionary of all objects in the pdf document.  See PDF 1.7 - 7.7.2.
     Catalog(Catalog),
     /// Collection of page(s) within the pages tree of the pdf document.  See PDF 1.7 - 7.7.3. 
-    Pages { id: ObjectId, kids: Vec<ObjectId> },
+    Pages(Pages),
 }
 
 /// A trait shared by all indirect (referenced) objects.
@@ -86,7 +87,7 @@ impl IndirectObject for Object {
         match self {
             Object::Document(document) => document.get_id(),
             Object::Catalog(catalog) => catalog.get_id(),
-            Object::Pages { id, .. } => *id,
+            Object::Pages(pages) => pages.get_id(),
         }
     }
 
@@ -94,7 +95,7 @@ impl IndirectObject for Object {
         match self {
             Object::Document(document) => document.set_id(value),
             Object::Catalog(catalog) => catalog.set_id(value),
-            Object::Pages { id, .. } => *id = value,
+            Object::Pages(pages) => pages.set_id(value),
         }
     }
 
@@ -102,7 +103,7 @@ impl IndirectObject for Object {
         match self {
             Object::Document(_) => ObjectType::Document,
             Object::Catalog(_) => ObjectType::Catalog,
-            Object::Pages { .. } => ObjectType::Pages,
+            Object::Pages(_) => ObjectType::Pages,
         }
     }
 
@@ -115,6 +116,7 @@ mod tests {
     #[test]
     fn test_object() {
         let object_id = ObjectId::new(1, 2);
+        let new_object_id = ObjectId::new(3, 4);
 
         // test default object (document)
         let object = Object::new(object_id);
@@ -128,9 +130,12 @@ mod tests {
         assert_eq!(object.get_type(), ObjectType::Catalog);
 
         // test pages
-        let object = Object::Pages { id: object_id, kids: vec![] };
+        let pages = Pages::new(object_id);
+        let mut object = Object::Pages(pages);
         assert_eq!(object.get_id(), object_id);
         assert_eq!(object.get_type(), ObjectType::Pages);
+        object.set_id(new_object_id);
+        assert_eq!(object.get_id(), new_object_id);
     }
 
 }
