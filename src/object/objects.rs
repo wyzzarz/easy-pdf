@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 use super::{Object, IndirectObject, ObjectType, object_id::ObjectId};
+use crate::pages::Pages;
 
 /// Holds all indirect (referenced) objects to be included in a pdf document.
 #[derive(Debug, Clone, PartialEq)]
@@ -56,6 +57,13 @@ impl Objects {
     /// Gets all objects by type.
     pub fn by_type(&self, object_type: ObjectType) -> Vec<Object> {
         self.objects.values().filter(|object| object.get_type() == object_type).cloned().collect()
+    }
+
+    /// Gets the `Pages` page tree.
+    pub fn page_tree(&self) -> Option<Pages> {
+        self.by_type(ObjectType::Pages)
+            .first()
+            .and_then(|object| Pages::try_from(object.clone()).ok())
     }
 
     /// Inserts a new object.
