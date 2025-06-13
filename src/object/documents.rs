@@ -4,7 +4,7 @@
 use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
-use super::{Object, ObjectId};
+use super::{Object, ObjectId, ObjectType};
 use super::objects::Objects;
 
 /// Document identifier.
@@ -71,6 +71,12 @@ pub fn register_document() -> DocumentId {
     DOCUMENTS.lock().unwrap().register_document()
 }
 
+/// Gets the document.
+pub fn get_document(document_id: DocumentId) -> Option<Object> {
+    DOCUMENTS.lock().unwrap().get(&document_id)
+        .and_then(|objects| objects.by_type(ObjectType::Document).first().cloned())
+}
+
 /// Gets document objects.
 pub fn get(document_id: DocumentId) -> Option<Objects> {
     DOCUMENTS.lock().unwrap().get(document_id)
@@ -115,6 +121,21 @@ mod tests {
         assert_eq!(documents.documents.len(), 0);
         assert!(documents.register_document() > 0);
         assert_eq!(documents.documents.len(), 1);
+    }
+
+
+    #[test]
+    fn test_get_document() {
+        let doc_id = register_document();
+        let document = get_document(doc_id);
+        assert!(document.is_some());
+        match document.unwrap() {
+            Object::Document { id, document_id } => {
+                assert_eq!(document_id, doc_id);
+                assert_eq!(id, ObjectId::new(0, 0));
+            }
+            _ => panic!("Unexpected object type"),
+        }
     }
 
     #[test]
