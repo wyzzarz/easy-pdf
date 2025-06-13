@@ -38,6 +38,8 @@ $ cargo run --example easy-pdf-rs-example
 
 */
 
+pub mod resources;
+
 pub fn hello_world() -> Result<(), Box<dyn std::error::Error>> {
     eprintln!("Hello, world!");
     Ok(())
