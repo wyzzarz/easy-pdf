@@ -26,6 +26,9 @@ include = [
 [dependencies]
 env_logger = "0.11.8"
 log = "0.4.27"
+maplit = "1.0.2"
 regex = "1.11.1"
 rust-embed = { version = "8.7.2", features = ["include-exclude", "interpolate-folder-path"] }
+rust_decimal = "1.37.2"
+rust_decimal_macros = "1.37.1"
 tempfile = "3.20.0"
