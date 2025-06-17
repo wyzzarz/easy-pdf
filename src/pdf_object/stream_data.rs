@@ -152,7 +152,7 @@ impl StreamData {
         // encode the image for the specified format
         let mut stream_data = match format {
             Some(ImageFormat::Png) => Self::encode_png(&image),
-            // Some(ImageFormat::Jpeg) => Self::encode_jpeg(&image),
+            Some(ImageFormat::Jpeg) => Self::encode_jpeg(&image, image_bytes),
             // Some(ImageFormat::Gif) => Self::encode_gif(&image),
             // Some(ImageFormat::WebP) => Self::encode_webp(&image),
             // Some(ImageFormat::Pnm) => Self::encode_prm(&image),
@@ -242,23 +242,27 @@ impl StreamData {
         })
     }
 
-    // fn encode_jpeg(image: &image::DynamicImage) -> Result<Self, Box<dyn std::error::Error>> {
-    //     // use DCTDecode to encode the image
-    //     // determine the DCTDecode filter parameters per pdf object stream DCTDecode
-    //     // create a stream data
-    //     // set the length, filter data and data for the compressed jpeg image
-    //     let mut encoded_data = Vec::new();
-    //     image.write_to(&mut std::io::Cursor::new(&mut encoded_data), image::ImageFormat::Jpeg)?;
+    fn encode_jpeg(image: &image::DynamicImage, bytes: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
+        // setup filters
+        let mut filters: Vec<FilterData> = Vec::new();
 
-    //     Ok(StreamData {
-    //         length: encoded_data.len(),
-    //         filter_data: FilterData {
-    //             filter: Filter::DCTDecode,
-    //             params: HashMap::new(), // Add parameters if needed for the filter
-    //         },
-    //         data: encoded_data,
-    //     })
-    // }
+        // add DCT filter
+        let dct_filter = FilterData::new_image(Filter::DCTDecode, image)?;
+        filters.push(dct_filter);
+
+        // encode jpeg data using ascii85
+        let encoded_data = ascii85::encode(bytes).as_bytes().to_vec();
+
+        // add ascii85 filter
+        filters.insert(0, FilterData::new_ascii85());
+        
+        Ok(StreamData {
+            length: encoded_data.len(),
+            dict: hashmap! {},
+            filter_data: filters,
+            data: encoded_data,
+        })
+    }
 
     // fn encode_gif(image: &image::DynamicImage) -> Result<Self, Box<dyn std::error::Error>> {
     //     // use LZWDecode to encode the image
@@ -283,16 +287,33 @@ impl StreamData {
 
 #[cfg(test)]
 mod tests {
+    use tempfile::NamedTempFile;
     use super::*;
     use crate::resources;
 
     #[test]
     fn test_png() {
-        let png_path = resources::get_resource_path("tests/test.png");
-        let stream_data = StreamData::encode_image_file(&png_path.unwrap().to_path_buf());
+        let img_path = resources::get_resource_path("tests/test.png");
+        let stream_data = StreamData::encode_image_file(&img_path.unwrap().to_path_buf());
         assert!(stream_data.is_ok());
         let stream_data = stream_data.unwrap();
         assert_eq!(stream_data.to_string(), resources::get_resource_string("tests/test.png.stream_data").unwrap());
+    }
+
+    #[test]
+    fn test_jpeg() {
+        let img_path = resources::get_resource_path("tests/test.jpg");
+        let stream_data = StreamData::encode_image_file(&img_path.unwrap().to_path_buf());
+        assert!(stream_data.is_ok());
+        let stream_data = stream_data.unwrap();
+        if false {
+            let mut temp_file = NamedTempFile::new().unwrap();
+            temp_file.disable_cleanup(true);
+            let (mut file, path) = temp_file.keep().unwrap();
+            eprintln!("Temp jpeg stream file: {:?}", path);
+            stream_data.render_stream(&mut file).unwrap();
+        }
+        assert_eq!(stream_data.to_string(), resources::get_resource_string("tests/test.jpg.stream_data").unwrap());
     }
 
 }
