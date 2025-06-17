@@ -1,9 +1,11 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use std::path::Path;
 use crate::cross_reference::CrossReferenceTable;
 use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
+use crate::helpers::write_all_count;
 
 /// The pdf document.
 #[derive(Debug, Clone, PartialEq)]
@@ -33,7 +35,17 @@ impl IndirectObject for Document {
         ObjectType::Document
     }
 
-    fn render(&self, _doc_id: DocumentId, _parent: ObjectId, _writer: &mut dyn std::io::Write, _xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+    /// The file structure of a PDF document includes:
+    /// - One line header
+    /// - Body of objects
+    /// - Cross-reference table of indirect objects
+    /// - Trailer providing the location of the cross-reference table and other special objects
+    /// 
+    /// See PDF 1.7 - 7.5.1
+    fn render(&self, _doc_id: DocumentId, _parent: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+        // add header
+        xref.add_bytes(write_all_count(writer, b"%PDF-1.7\n")?);
+
         Ok(())
     }
 
@@ -67,11 +79,25 @@ impl Document {
         self.document_id
     }
 
+    /// Writes pdf to the specified buffer.
+    pub fn write(&self, writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>> {
+        let mut xref = CrossReferenceTable::new();
+        self.render(self.document_id, self.id, writer, &mut xref)
+    }
+
+    /// Saves pdf to the specified filepath.
+    pub fn save(&self, filepath: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        let mut file = std::fs::File::create(filepath)?;
+        self.write(&mut file)
+    }
+
 }
 
 #[cfg(test)]
 mod tests {
+    use tempfile::NamedTempFile;
     use super::*;
+    use crate::object::documents;
 
     #[test]
     fn test_from_object() {
@@ -82,6 +108,36 @@ mod tests {
         assert_eq!(document, document1);
         assert_eq!(document1.id, ObjectId::new(0, 0));
         assert_eq!(document1.document_id, id);
+    }
+
+    #[test]
+    fn test_render() {
+        // get document
+        let doc_id = documents::register_document();
+        let doc = Document::try_from(documents::get_document(doc_id).unwrap()).unwrap();
+
+        // render document
+        let mut data: Vec<u8> = Vec::new();
+        let rc = doc.write(&mut data);
+        assert!(rc.is_ok());
+        assert_eq!(data, b"%PDF-1.7\n");
+    }
+
+    #[test]
+    fn test_save() {
+        // get document
+        let doc_id = documents::register_document();
+        let doc = Document::try_from(documents::get_document(doc_id).unwrap()).unwrap();
+
+        // save document
+        let mut file = NamedTempFile::new().unwrap();
+        if false {
+            file.disable_cleanup(true);
+            eprintln!("Access PDF: open -a Preview {}", file.path().display());
+        }
+        let path = file.path();
+        assert!(doc.save(&path).is_ok());
+        assert!(path.try_exists().unwrap_or(false));
     }
 
 }
