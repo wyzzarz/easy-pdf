@@ -48,6 +48,10 @@ impl IndirectObject for DocInfo {
         ObjectType::DocInfo
     }
 
+    fn render(&self, _doc_id: DocumentId, _parent_id: ObjectId, _writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
+
 }
 
 impl TryFrom<Object> for DocInfo {

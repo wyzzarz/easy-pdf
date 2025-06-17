@@ -32,6 +32,10 @@ impl IndirectObject for Document {
         ObjectType::Document
     }
 
+    fn render(&self, _doc_id: DocumentId, _parent: ObjectId, _writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
+
 }
 
 impl TryFrom<Object> for Document {
