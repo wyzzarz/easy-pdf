@@ -82,6 +82,8 @@ pub trait IndirectObject {
     fn set_id(&mut self, id: ObjectId);
     /// Gets the object's type.
     fn get_type(&self) -> ObjectType;
+    /// Generates PDF output.
+    fn render(&self, doc_id: DocumentId, parent_id: ObjectId, writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>>;
 }
 
 impl IndirectObject for Object {
@@ -122,6 +124,16 @@ impl IndirectObject for Object {
             Object::Catalog(_) => ObjectType::Catalog,
             Object::Pages(_) => ObjectType::Pages,
             Object::Page(_) => ObjectType::Page,
+        }
+    }
+
+    fn render(&self, doc_id: DocumentId, parent_id: ObjectId, writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>> {
+        match self {
+            Object::Document(document) => document.render(doc_id, parent_id, writer),
+            Object::DocInfo(doc_info) => doc_info.render(doc_id, parent_id, writer),
+            Object::Catalog(catalog) => catalog.render(doc_id, parent_id, writer),
+            Object::Pages(pages) => pages.render(doc_id, parent_id, writer),
+            Object::Page(page) => page.render(doc_id, parent_id, writer),
         }
     }
 
