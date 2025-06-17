@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use std::path::Path;
+use crate::catalog::Catalog;
 use crate::cross_reference::CrossReferenceTable;
 use crate::information::DocInfo;
 use crate::object::documents::DocumentId;
@@ -51,10 +52,15 @@ impl IndirectObject for Document {
         let doc_info = DocInfo::get_doc_info(self.document_id())?
             .ok_or("Document information not found for document.")?;
         doc_info.render(doc_id, self.get_id(), writer, xref)?;
+        
+        // write catalog
+        let catalog = Catalog::get_catalog(self.document_id())?
+            .ok_or("Catalog not found for document.")?;
+        catalog.render(doc_id, self.get_id(), writer, xref)?;
 
         // write cross reference table
         let _xref_offset = xref.render(writer)?;
-
+        
         Ok(())
     }
 
