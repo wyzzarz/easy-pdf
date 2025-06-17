@@ -14,8 +14,11 @@
  * 7.3.9 : Null
  */
 
+pub mod stream_data;
+
 use rust_decimal::Decimal;
 use std::{collections::HashMap, str::FromStr};
+use self::stream_data::StreamData;
 use crate::helpers::write_all_count;
 
 /// Pdf object types.
@@ -28,7 +31,7 @@ pub enum PdfObject {
     Name(String),
     Array(Vec<PdfObject>),
     Dictionary(HashMap<String, PdfObject>),
-    Stream(Vec<u8>),
+    Stream(StreamData),
     Null,
     Raw(Vec<u8>),
 }
@@ -216,8 +219,8 @@ impl PdfObject {
     }
 
     /// Generates PDF output for the stream.
-    fn render_stream(&self, _writer: &mut dyn std::io::Write, _s: &Vec<u8>) -> Result<usize, Box<dyn std::error::Error>> {
-        Ok(0)
+    fn render_stream(&self, writer: &mut dyn std::io::Write, s: &StreamData) -> Result<usize, Box<dyn std::error::Error>> {
+        Ok(s.render_stream(writer)?)
     }
 
     /// Generates PDF output for the boolean.
@@ -235,6 +238,7 @@ impl PdfObject {
 #[cfg(test)]
 mod tests {
     use maplit::hashmap;
+    use crate::resources;
     use super::*;
 
     #[test]
@@ -405,6 +409,21 @@ mod tests {
         let output = "1 2 R";
         assert_eq!(PdfObject::Raw(input.to_vec()).render(&mut bytes).ok(), Some(output.len()));
         assert_eq!(PdfObject::Raw(input.to_vec()).to_string(), output);
+    }
+
+    #[test]
+    fn test_stream() {
+        let png_path = resources::get_resource_path("tests/test.png");
+        let stream_data = StreamData::encode_image_file(&png_path.unwrap().to_path_buf()).unwrap();
+        let mut bytes: Vec<u8> = Vec::new();
+        assert_eq!(
+            PdfObject::Stream(stream_data.clone()).render(&mut bytes).ok(),
+            Some(resources::get_resource_string("tests/test.png.stream_data").unwrap().len())
+        );
+        assert_eq!(
+            PdfObject::Stream(stream_data).to_string(), 
+            resources::get_resource_string("tests/test.png.stream_data").unwrap()
+        );
     }
 
 }
