@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use std::path::Path;
+use crate::catalog::Catalog;
 use crate::cross_reference::CrossReferenceTable;
 use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
@@ -42,13 +43,18 @@ impl IndirectObject for Document {
     /// - Trailer providing the location of the cross-reference table and other special objects
     /// 
     /// See PDF 1.7 - 7.5.1
-    fn render(&self, _doc_id: DocumentId, _parent: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, doc_id: DocumentId, _parent: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
         // add header
         xref.add_bytes(write_all_count(writer, b"%PDF-1.7\n")?);
 
+        // write catalog
+        let catalog = Catalog::get_catalog(self.document_id())?
+            .ok_or("Catalog not found for document.")?;
+        catalog.render(doc_id, self.get_id(), writer, xref)?;
+
         // write cross reference table
         let _xref_offset = xref.render(writer)?;
-
+        
         Ok(())
     }
 
@@ -92,8 +98,7 @@ impl Document {
     /// Saves pdf to the specified filepath.
     pub fn save(&self, filepath: &Path) -> Result<(), Box<dyn std::error::Error>> {
         let mut file = std::fs::File::create(filepath)?;
-        self.write(&mut file)?;
-        Ok(())
+        self.write(&mut file)
     }
 
 }
