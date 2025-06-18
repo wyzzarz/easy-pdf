@@ -10,6 +10,7 @@ use std::str::FromStr;
 pub use documents::DocumentId;
 pub use object_id::ObjectId;
 use crate::catalog::Catalog;
+use crate::cross_reference::CrossReferenceTable;
 use crate::document::Document;
 use crate::page::Page;
 use crate::pages::Pages;
@@ -77,7 +78,7 @@ pub trait IndirectObject {
     /// Gets the object's type.
     fn get_type(&self) -> ObjectType;
     /// Generates PDF output.
-    fn render(&self, doc_id: DocumentId, parent_id: ObjectId, writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>>;
+    fn render(&self, doc_id: DocumentId, parent_id: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>>;
 }
 
 impl IndirectObject for Object {
@@ -118,12 +119,12 @@ impl IndirectObject for Object {
         }
     }
 
-    fn render(&self, doc_id: DocumentId, parent_id: ObjectId, writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, doc_id: DocumentId, parent_id: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
         match self {
-            Object::Document(document) => document.render(doc_id, parent_id, writer),
-            Object::Catalog(catalog) => catalog.render(doc_id, parent_id, writer),
-            Object::Pages(pages) => pages.render(doc_id, parent_id, writer),
-            Object::Page(page) => page.render(doc_id, parent_id, writer),
+            Object::Document(document) => document.render(doc_id, parent_id, writer, xref),
+            Object::Catalog(catalog) => catalog.render(doc_id, parent_id, writer, xref),
+            Object::Pages(pages) => pages.render(doc_id, parent_id, writer, xref),
+            Object::Page(page) => page.render(doc_id, parent_id, writer, xref),
         }
     }
 
