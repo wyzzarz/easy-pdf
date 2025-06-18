@@ -119,7 +119,8 @@ mod tests {
     use chrono::prelude::*;
     use tempfile::NamedTempFile;
     use super::*;
-    use crate::object::documents;
+    use crate::object::{Object, documents};
+    use crate::page::Page;
     use crate::resources;
 
     #[test]
@@ -146,6 +147,22 @@ mod tests {
                 doc_info.set_modification_date(Some(Local.with_ymd_and_hms(2025, 7, 19, 18, 38, 58).unwrap()));
                 DocInfo::update_doc_info(doc_id, doc_info).ok()
         }).is_some());
+        
+        // add a page
+        assert!(documents::mutate(doc_id, |objects| {
+            // add a new page
+            let new_id = objects.new_object_id();
+            let page = Page::new(new_id);
+            objects.insert(Object::Page(page.clone()));
+
+            // add page to (parent) page_tree
+            let mut page_tree = objects.page_tree().unwrap();
+            assert!(page_tree.add_child(Object::Page(page)).is_ok());
+            objects.insert(Object::Pages(page_tree));
+
+            // nothing to return
+            None::<Object>
+        }).is_ok());
 
         // render document
         let mut data: Vec<u8> = Vec::new();

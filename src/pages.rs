@@ -38,7 +38,7 @@ impl IndirectObject for Pages {
         ObjectType::Pages
     }
 
-    fn render(&self, _doc_id: DocumentId, _parent_id: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, doc_id: DocumentId, _parent_id: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
         // add pages to cross reference table
         xref.add_entry(self.get_id().generation_number, true);
 
@@ -51,7 +51,7 @@ impl IndirectObject for Pages {
             "Type".to_string() => PdfObject::Name(self.get_type().to_string()),
             "Kids".to_string() => PdfObject::Array(
                 self.kids.iter()
-                    .map(|object_id| PdfObject::Raw(object_id.to_string().into()))
+                    .map(|object_id| PdfObject::Raw(object_id.to_string_ref().into()))
                     .collect::<Vec<PdfObject>>()
             ),
             "Count".to_string() => PdfObject::from(self.count),
@@ -60,7 +60,13 @@ impl IndirectObject for Pages {
 
         // end object
         xref.add_bytes(write_all_count(writer, b"\nendobj\n")?);
-        
+
+        // output each child
+        for kid_id in self.kids.iter() {
+            documents::get_object(doc_id, kid_id)
+                .and_then(|kid| Some(kid.render(doc_id, self.get_id(), writer, xref)));
+        }
+
         Ok(())
     }
 
