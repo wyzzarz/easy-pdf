@@ -48,7 +48,7 @@ impl IndirectObject for DocInfo {
         ObjectType::DocInfo
     }
 
-    fn render(&self, _doc_id: DocumentId, _parent_id: ObjectId, _writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, _doc_id: DocumentId, _parent_id: ObjectId, _writer: &mut dyn std::io::Write, _xref: &mut crate::cross_reference::CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
         Ok(())
     }
 

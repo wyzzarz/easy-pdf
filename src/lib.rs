@@ -47,6 +47,7 @@ pub mod page;
 pub mod pages;
 pub mod pdf_object;
 pub mod resources;
+pub mod cross_reference;
 
 pub fn hello_world() -> Result<(), Box<dyn std::error::Error>> {
     eprintln!("Hello, world!");
