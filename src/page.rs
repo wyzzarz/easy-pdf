@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use crate::cross_reference::CrossReferenceTable;
 use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
 
@@ -30,7 +31,7 @@ impl IndirectObject for Page {
         ObjectType::Page
     }
 
-    fn render(&self, _doc_id: DocumentId, _parent: ObjectId, _writer: &mut dyn std::io::Write) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, _doc_id: DocumentId, _parent: ObjectId, _writer: &mut dyn std::io::Write, _xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
         Ok(())
     }
 
