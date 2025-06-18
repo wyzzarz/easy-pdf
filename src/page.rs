@@ -1,9 +1,12 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use maplit::hashmap;
 use crate::cross_reference::CrossReferenceTable;
 use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
+use crate::pdf_object::PdfObject;
+use crate::helpers::write_all_count;
 
 /// A page.  See PDF 1.7 - 7.7.3. 
 #[derive(Debug, Clone, PartialEq)]
@@ -31,7 +34,24 @@ impl IndirectObject for Page {
         ObjectType::Page
     }
 
-    fn render(&self, _doc_id: DocumentId, _parent: ObjectId, _writer: &mut dyn std::io::Write, _xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, _doc_id: DocumentId, parent: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+        // add page to cross reference table
+        xref.add_entry(self.get_id().generation_number, true);
+
+        // write object id
+        xref.add_bytes(write_all_count(writer, self.get_id().to_string().as_bytes())?);
+        xref.add_bytes(write_all_count(writer, b"\n")?);
+
+        // write dictionary
+        let obj = PdfObject::Dictionary(hashmap! {
+            "Type".to_string() => PdfObject::Name(self.get_type().to_string()),
+            "Parent".to_string() => PdfObject::Raw(parent.to_string_ref().into()),
+        });
+        xref.add_bytes(obj.render(writer)?);
+
+        // end object
+        xref.add_bytes(write_all_count(writer, b"\nendobj\n")?);
+        
         Ok(())
     }
 

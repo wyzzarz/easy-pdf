@@ -113,7 +113,8 @@ impl Document {
 mod tests {
     use tempfile::NamedTempFile;
     use super::*;
-    use crate::object::documents;
+    use crate::object::{Object, documents};
+    use crate::page::Page;
     use crate::resources;
 
     #[test]
@@ -132,6 +133,22 @@ mod tests {
         // get document
         let doc_id = documents::register_document();
         let doc = Document::try_from(documents::get_document(doc_id).unwrap()).unwrap();
+
+        // add a page
+        assert!(documents::mutate(doc_id, |objects| {
+            // add a new page
+            let new_id = objects.new_object_id();
+            let page = Page::new(new_id);
+            objects.insert(Object::Page(page.clone()));
+
+            // add page to (parent) page_tree
+            let mut page_tree = objects.page_tree().unwrap();
+            assert!(page_tree.add_child(Object::Page(page)).is_ok());
+            objects.insert(Object::Pages(page_tree));
+
+            // nothing to return
+            None::<Object>
+        }).is_ok());
 
         // render document
         let mut data: Vec<u8> = Vec::new();
