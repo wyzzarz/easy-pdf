@@ -8,6 +8,7 @@ use crate::information::DocInfo;
 use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
 use crate::helpers::write_all_count;
+use crate::pages::Pages;
 
 /// The pdf document.
 #[derive(Debug, Clone, PartialEq)]
@@ -57,10 +58,15 @@ impl IndirectObject for Document {
         let catalog = Catalog::get_catalog(self.document_id())?
             .ok_or("Catalog not found for document.")?;
         catalog.render(doc_id, self.get_id(), writer, xref)?;
+        
+        // write pages tree
+        let page_tree = Pages::get_page_tree(self.document_id())?
+            .ok_or("Page tree not found for document.")?;
+        page_tree.render(doc_id, self.get_id(), writer, xref)?;
 
         // write cross reference table
         let _xref_offset = xref.render(writer)?;
-        
+
         Ok(())
     }
 

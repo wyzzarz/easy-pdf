@@ -1,9 +1,12 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use maplit::hashmap;
 use crate::cross_reference::CrossReferenceTable;
 use crate::object::documents::{self, DocumentId};
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
+use crate::pdf_object::PdfObject;
+use crate::helpers::write_all_count;
 
 /// Collection of page(s) within the pages tree of the pdf document.  See PDF 1.7 - 7.7.3. 
 #[derive(Debug, Clone, PartialEq)]
@@ -35,7 +38,29 @@ impl IndirectObject for Pages {
         ObjectType::Pages
     }
 
-    fn render(&self, _doc_id: DocumentId, _parent_id: ObjectId, _writer: &mut dyn std::io::Write, _xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, _doc_id: DocumentId, _parent_id: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+        // add pages to cross reference table
+        xref.add_entry(self.get_id().generation_number, true);
+
+        // write object id
+        xref.add_bytes(write_all_count(writer, self.get_id().to_string().as_bytes())?);
+        xref.add_bytes(write_all_count(writer, b"\n")?);
+
+        // write dictionary
+        let obj = PdfObject::Dictionary(hashmap! {
+            "Type".to_string() => PdfObject::Name(self.get_type().to_string()),
+            "Kids".to_string() => PdfObject::Array(
+                self.kids.iter()
+                    .map(|object_id| PdfObject::Raw(object_id.to_string().into()))
+                    .collect::<Vec<PdfObject>>()
+            ),
+            "Count".to_string() => PdfObject::from(self.count),
+        });
+        xref.add_bytes(obj.render(writer)?);
+
+        // end object
+        xref.add_bytes(write_all_count(writer, b"\nendobj\n")?);
+        
         Ok(())
     }
 
@@ -75,6 +100,7 @@ impl Pages {
             },
             Object::Page(page) => {
                 self.kids.push(page.get_id());
+                self.count += 1;
                 Ok(())
             },
             _ => Err(format!("Child '{}' is not Pages or Page.", child.get_type()).into()),
