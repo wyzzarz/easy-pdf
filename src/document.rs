@@ -3,6 +3,7 @@
 
 use std::path::Path;
 use crate::cross_reference::CrossReferenceTable;
+use crate::information::DocInfo;
 use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
 use crate::helpers::write_all_count;
@@ -42,9 +43,14 @@ impl IndirectObject for Document {
     /// - Trailer providing the location of the cross-reference table and other special objects
     /// 
     /// See PDF 1.7 - 7.5.1
-    fn render(&self, _doc_id: DocumentId, _parent: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, doc_id: DocumentId, _parent: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
         // add header
         xref.add_bytes(write_all_count(writer, b"%PDF-1.7\n")?);
+
+        // write document information
+        let doc_info = DocInfo::get_doc_info(self.document_id())?
+            .ok_or("Document information not found for document.")?;
+        doc_info.render(doc_id, self.get_id(), writer, xref)?;
 
         // write cross reference table
         let _xref_offset = xref.render(writer)?;
@@ -98,6 +104,7 @@ impl Document {
 
 #[cfg(test)]
 mod tests {
+    use chrono::prelude::*;
     use tempfile::NamedTempFile;
     use super::*;
     use crate::object::documents;
@@ -119,6 +126,14 @@ mod tests {
         // get document
         let doc_id = documents::register_document();
         let doc = Document::try_from(documents::get_document(doc_id).unwrap()).unwrap();
+
+        // remove dates from doc info
+        assert!(DocInfo::get_doc_info(doc_id).unwrap()
+            .and_then(|mut doc_info| {
+                doc_info.set_creation_date(Some(Local.with_ymd_and_hms(2025, 6, 19, 18, 38, 58).unwrap()));
+                doc_info.set_modification_date(Some(Local.with_ymd_and_hms(2025, 7, 19, 18, 38, 58).unwrap()));
+                DocInfo::update_doc_info(doc_id, doc_info).ok()
+        }).is_some());
 
         // render document
         let mut data: Vec<u8> = Vec::new();
