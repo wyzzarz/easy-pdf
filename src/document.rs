@@ -46,6 +46,9 @@ impl IndirectObject for Document {
         // add header
         xref.add_bytes(write_all_count(writer, b"%PDF-1.7\n")?);
 
+        // write cross reference table
+        let _xref_offset = xref.render(writer)?;
+
         Ok(())
     }
 
@@ -98,6 +101,7 @@ mod tests {
     use tempfile::NamedTempFile;
     use super::*;
     use crate::object::documents;
+    use crate::resources;
 
     #[test]
     fn test_from_object() {
@@ -120,7 +124,7 @@ mod tests {
         let mut data: Vec<u8> = Vec::new();
         let rc = doc.write(&mut data);
         assert!(rc.is_ok());
-        assert_eq!(data, b"%PDF-1.7\n");
+        assert_eq!(String::from_utf8(data).unwrap(), resources::get_resource_string("tests/document.pdf").unwrap());
     }
 
     #[test]

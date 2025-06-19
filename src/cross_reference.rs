@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use crate::helpers::write_all_count;
+
 /// An indirect object reference in the cross-reference table.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CrossReferenceTableEntry {
@@ -66,7 +68,28 @@ impl CrossReferenceTable {
             in_use: in_use,
         });
     }
-    
+        
+    /// Adds the cross-reference table to the PDF output.
+    /// 
+    /// Returns the byte offset for the start of the cross-reference table.
+    pub fn render(&self, writer: &mut dyn std::io::Write) -> Result<usize, Box<dyn std::error::Error>> {
+        let offset = self.total_bytes + 1;
+
+        // write header
+        write_all_count(writer, b"xref\n")?;
+
+        // write starting object number and number of objects
+        write_all_count(writer, format!("0 {}\n", self.entries.len()).as_bytes())?;
+
+        // write indirect object entries
+        for entry in self.entries.iter() {
+            let status = if entry.in_use { "n" } else { "f" };
+            write_all_count(writer, format!("{:010} {:05} {}\n", entry.offset, entry.generation, status).as_bytes())?;
+        }
+
+        Ok(offset)
+    }
+
 }
 
 #[cfg(test)]
