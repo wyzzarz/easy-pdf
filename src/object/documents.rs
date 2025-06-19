@@ -8,6 +8,7 @@ use super::{IndirectObject, Object, ObjectId, ObjectType};
 use super::objects::Objects;
 use crate::catalog::Catalog;
 use crate::document::Document;
+use crate::information::DocInfo;
 use crate::pages::Pages;
 
 /// Document identifier.
@@ -57,6 +58,11 @@ impl Documents {
         
         // add this document as the first object
         objects.insert(new_doc);
+
+        // add information for this document
+        let info_id = objects.new_object_id();
+        let doc_info = DocInfo::new(info_id);
+        objects.insert(Object::DocInfo(doc_info.clone()));
 
         // add page tree for this document
         let pages_id = objects.new_object_id();
@@ -160,15 +166,15 @@ mod tests {
         let mut documents = Documents::new();
         let doc_id = documents.register_document();
         let objects = documents.get(doc_id).unwrap();
-        assert_eq!(objects.len(), 3);
+        assert_eq!(objects.len(), 4);
         let new_id = objects.new_object_id();
         let new_catalog = Catalog::new(new_id);
         let new_object = Object::Catalog(new_catalog);
         let mut_objects = documents.get_mut(doc_id).unwrap();
         mut_objects.insert(new_object);
-        assert_eq!(mut_objects.len(), 4);
-        assert_eq!(objects.len(), 3);  // objects is immutable
-        assert_eq!(documents.get(doc_id).unwrap().len(), 4);
+        assert_eq!(mut_objects.len(), 5);
+        assert_eq!(objects.len(), 4);  // objects is immutable
+        assert_eq!(documents.get(doc_id).unwrap().len(), 5);
     }
 
     #[test]
@@ -177,7 +183,7 @@ mod tests {
         let doc_id = register_document();
 
         // test objects (includes document and catalog)
-        assert_eq!(get(doc_id).unwrap().len(), 3);
+        assert_eq!(get(doc_id).unwrap().len(), 4);
 
         // insert a new object
         let res = mutate(doc_id, |objects| {
@@ -189,7 +195,7 @@ mod tests {
         assert_eq!(res, None);
 
         // test objects
-        assert_eq!(get(doc_id).unwrap().len(), 4);
+        assert_eq!(get(doc_id).unwrap().len(), 5);
     }
 
 }
