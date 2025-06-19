@@ -41,6 +41,7 @@ $ cargo run --example easy-pdf-rs-example
 pub mod catalog;
 pub mod cross_reference;
 pub mod document;
+pub mod geometry;
 pub mod helpers;
 pub mod information;
 pub mod object;
