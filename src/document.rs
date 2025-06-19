@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use maplit::hashmap;
 use std::path::Path;
 use crate::catalog::Catalog;
 use crate::cross_reference::CrossReferenceTable;
@@ -9,6 +10,7 @@ use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
 use crate::helpers::write_all_count;
 use crate::pages::Pages;
+use crate::pdf_object::PdfObject;
 
 /// The pdf document.
 #[derive(Debug, Clone, PartialEq)]
@@ -65,7 +67,19 @@ impl IndirectObject for Document {
         page_tree.render(doc_id, self.get_id(), writer, xref)?;
 
         // write cross reference table
-        let _xref_offset = xref.render(writer)?;
+        let xref_offset = xref.render(writer)?;
+
+        // add trailer
+        write_all_count(writer, b"trailer\n")?;
+        let trailer_dict = PdfObject::Dictionary(hashmap! {
+            "Info".to_string() => PdfObject::Raw(doc_info.get_id().to_string_ref().as_bytes().to_vec()),
+            "Size".to_string() => PdfObject::from(xref.num_entries()),
+            "Root".to_string() => PdfObject::Raw(catalog.get_id().to_string_ref().as_bytes().to_vec()),
+        });
+        trailer_dict.render(writer)?;
+        write_all_count(writer, b"\nstartxref\n")?;
+        write_all_count(writer, format!("{}\n", xref_offset).as_bytes())?;
+        write_all_count(writer, b"%%EOF\n")?;
 
         Ok(())
     }
