@@ -30,6 +30,7 @@ pub enum PdfObject {
     Dictionary(HashMap<String, PdfObject>),
     Stream(Vec<u8>),
     Null,
+    Raw(Vec<u8>),
 }
 
 impl ToString for PdfObject {
@@ -127,6 +128,7 @@ impl PdfObject {
             PdfObject::Dictionary(d) => self.render_dictionary(writer, &d),
             PdfObject::Stream(s) => self.render_stream(writer, &s),
             PdfObject::Null => self.render_null(writer),
+            PdfObject::Raw(b) => self.render_raw(writer, &b),
         }?)
     }
 
@@ -221,6 +223,11 @@ impl PdfObject {
     /// Generates PDF output for the boolean.
     fn render_null(&self, writer: &mut dyn std::io::Write) -> Result<usize, Box<dyn std::error::Error>> {
         Ok(write_all_count(writer, b"null")?)
+    }
+
+    /// Add raw bytes to the PDF output.
+    fn render_raw(&self, writer: &mut dyn std::io::Write, b: &Vec<u8>) -> Result<usize, Box<dyn std::error::Error>> {
+        Ok(write_all_count(writer, b)?)
     }
 
 }
@@ -389,6 +396,15 @@ mod tests {
         });
         let output = b"<< /Array [1 2 3] /Bool true /Dictionary << /a 1 /b 2 /c 3 >> /HexString <4E6F> /Null null /Number 123 /String (This is a string) >>";
         assert_eq!(dict.to_string(), String::from_utf8(output.to_vec()).unwrap());
+    }
+
+    #[test]
+    fn test_raw() {
+        let mut bytes: Vec<u8> = Vec::new();
+        let input = b"1 2 R";
+        let output = "1 2 R";
+        assert_eq!(PdfObject::Raw(input.to_vec()).render(&mut bytes).ok(), Some(output.len()));
+        assert_eq!(PdfObject::Raw(input.to_vec()).to_string(), output);
     }
 
 }
