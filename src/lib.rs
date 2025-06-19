@@ -38,6 +38,7 @@ $ cargo run --example easy-pdf-rs-example
 
 */
 
+pub mod helpers;
 pub mod resources;
 
 pub fn hello_world() -> Result<(), Box<dyn std::error::Error>> {
