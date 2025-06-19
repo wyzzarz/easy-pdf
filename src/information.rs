@@ -1,10 +1,14 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use chrono::{DateTime, Local};
+use chrono::prelude::*;
+use std::collections::HashMap;
+use crate::cross_reference::CrossReferenceTable;
 use crate::helpers::get_lib_name;
 use crate::object::documents::{self, DocumentId};
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
+use crate::pdf_object::PdfObject;
+use crate::helpers::write_all_count;
 
 /// Primary dictionary of all objects in the pdf document.  See PDF 1.7 - 7.7.2.
 #[derive(Debug, Clone, PartialEq)]
@@ -48,7 +52,29 @@ impl IndirectObject for DocInfo {
         ObjectType::DocInfo
     }
 
-    fn render(&self, _doc_id: DocumentId, _parent_id: ObjectId, _writer: &mut dyn std::io::Write, _xref: &mut crate::cross_reference::CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&self, _doc_id: DocumentId, _parent_id: ObjectId, writer: &mut dyn std::io::Write, xref: &mut CrossReferenceTable) -> Result<(), Box<dyn std::error::Error>> {
+        // add catalog to cross reference table
+        xref.add_entry(self.get_id().generation_number, true);
+
+        // write object id
+        xref.add_bytes(write_all_count(writer, self.get_id().to_string().as_bytes())?);
+        xref.add_bytes(write_all_count(writer, b"\n")?);
+
+        // write dictionary
+        let mut dict: HashMap<String, PdfObject>  = HashMap::new();
+        self.title.as_ref().and_then(|title| dict.insert("Title".to_string(), PdfObject::String(title.clone())));
+        self.author.as_ref().and_then(|author| dict.insert("Author".to_string(), PdfObject::String(author.clone())));
+        self.subject.as_ref().and_then(|subject| dict.insert("Subject".to_string(), PdfObject::String(subject.clone())));
+        self.keywords.as_ref().and_then(|keywords| dict.insert("Keywords".to_string(), PdfObject::String(keywords.clone())));
+        self.creator.as_ref().and_then(|creator| dict.insert("Creator".to_string(), PdfObject::String(creator.clone())));
+        self.producer.as_ref().and_then(|producer| dict.insert("Producer".to_string(), PdfObject::String(producer.clone())));
+        self.creation_date.as_ref().and_then(|creation_date| dict.insert("CreationDate".to_string(), PdfObject::from(creation_date.clone())));
+        self.modification_date.as_ref().and_then(|modification_date| dict.insert("ModDate".to_string(), PdfObject::from(modification_date.clone())));
+        xref.add_bytes(PdfObject::Dictionary(dict).render(writer)?);
+
+        // end object
+        xref.add_bytes(write_all_count(writer, b"\nendobj\n")?);
+
         Ok(())
     }
 
@@ -209,6 +235,39 @@ mod tests {
     }
 
     #[test]
+    fn test_render() {
+        // setup doc_info
+        let id = ObjectId::from((1, 2));
+        let mut doc_info = DocInfo::new(id);
+        doc_info.set_author(Some("some author".to_string()));
+        doc_info.set_title(Some("some title".to_string()));
+        doc_info.set_subject(Some("some subject".to_string()));
+        doc_info.set_keywords(Some("some keywords".to_string()));
+        doc_info.set_creation_date(Some(Local.with_ymd_and_hms(2025, 6, 19, 18, 38, 58).unwrap()));
+        doc_info.set_modification_date(Some(Local.with_ymd_and_hms(2025, 7, 19, 18, 38, 58).unwrap()));
+
+        // test render
+        let mut writer = Vec::new();
+        let mut xref = CrossReferenceTable::new();
+        doc_info.render(123, id, &mut writer, &mut xref).unwrap();
+        assert_eq!(String::from_utf8(writer).unwrap(), format!("1 2 obj\n\
+<< \
+/Author (some author) \
+/CreationDate (D:20250619183858-07'00) \
+/Creator ({}) \
+/Keywords (some keywords) \
+/ModDate (D:20250719183858-07'00) \
+/Producer ({}) \
+/Subject (some subject) \
+/Title (some title) \
+>>\n\
+endobj\n",
+            get_lib_name(),
+            get_lib_name(),
+        ));
+    }
+
+    #[test]
     fn test_get_doc_info() {
         // test no document
         let document_id = 123;
@@ -329,6 +388,6 @@ mod tests {
                 assert_eq!(doc_info.modification_date(), modification_date);
                 Some(doc_info)
             });
-        }
+    }
 
 }
