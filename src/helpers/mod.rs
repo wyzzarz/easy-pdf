@@ -3,6 +3,11 @@
 
 use std::io::{self, Write};
 
+/// Gets package name and version
+pub fn get_lib_name() -> String {
+    format!("{} v{}", env!("CARGO_PKG_NAME").to_string(), env!("CARGO_PKG_VERSION").to_string())
+}
+
 /// Similar to `std::io::Write::write_all`.  With the addition of returning the number of bytes added.
 pub fn write_all_count<W: Write + ?Sized>(writer: &mut W, mut buf: &[u8]) -> io::Result<usize> {
     let mut count = 0;
@@ -22,7 +27,14 @@ pub fn write_all_count<W: Write + ?Sized>(writer: &mut W, mut buf: &[u8]) -> io:
 
 #[cfg(test)]
 mod tests {
+    use regex::Regex;
     use super::*;
+
+    #[test]
+    fn test_get_lib_name() {
+        let re = Regex::new(r"^easy-pdf v\d.\d.\d").unwrap();
+        assert!(re.is_match(&get_lib_name()));
+    }
 
     #[test]
     fn test_write_all_count() {
