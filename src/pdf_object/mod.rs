@@ -16,6 +16,7 @@
 
 pub mod stream_data;
 
+use chrono::prelude::*;
 use rust_decimal::Decimal;
 use std::{collections::HashMap, str::FromStr};
 use self::stream_data::StreamData;
@@ -114,6 +115,18 @@ impl From<&str> for PdfObject {
 
     fn from(s: &str) -> Self {
         PdfObject::String(s.to_string())
+    }
+
+}
+
+impl From<chrono::DateTime<chrono::Local>> for PdfObject {
+
+    /// See Dates PDF 1.7 - 7.9.4
+    fn from(dt: DateTime<Local>) -> Self {
+        PdfObject::String(format!("D:{}{}'00", 
+            dt.format("%Y%m%d%H%M%S").to_string(), 
+            dt.format("%z").to_string().split_at(3).0
+        ))
     }
 
 }
@@ -424,6 +437,13 @@ mod tests {
             PdfObject::Stream(stream_data).to_string(), 
             resources::get_resource_string("tests/test.png.stream_data").unwrap()
         );
+    }
+
+    #[test]
+    fn test_date() {
+        let date = Local.with_ymd_and_hms(2025, 6, 19, 18, 38, 58).unwrap();
+        let date_obj = PdfObject::from(date);
+        assert_eq!(date_obj.to_string(), "(D:20250619183858-07'00)");
     }
 
 }
