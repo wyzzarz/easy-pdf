@@ -3,6 +3,8 @@
 
 use rust_decimal::Decimal;
 use std::str::FromStr;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use crate::helpers::round;
 use crate::pdf_object::PdfObject;
 
 /// Unit with `0` point value.
@@ -88,6 +90,118 @@ impl From<Unit> for PdfObject {
     /// Converts the Unit to a PDF object in points.
     fn from(value: Unit) -> Self {
         PdfObject::Number(value.point().real_value())
+    }
+
+}
+
+impl Add for &Unit {
+
+    type Output = Unit;
+
+    fn add(self, rhs: Self) -> Unit {
+        match self {
+            Unit::Cm(_) => Unit::Cm(round(self.decimal_value() + rhs.cm().decimal_value())),
+            Unit::Pixel(_) => Unit::Pixel(round(self.decimal_value() + rhs.pixel().decimal_value())),
+            Unit::Point(_) => Unit::Point(round(self.decimal_value() + rhs.point().decimal_value())),
+            Unit::Inch(_) => Unit::Inch(round(self.decimal_value() + rhs.inch().decimal_value())),
+            Unit::Mil(_) => Unit::Mil(round(self.decimal_value() + rhs.mil().decimal_value())),
+            Unit::Mm(_) => Unit::Mm(round(self.decimal_value() + rhs.mm().decimal_value())),
+        }
+    }
+
+}
+
+impl AddAssign<&Unit> for Unit {
+
+    fn add_assign(&mut self, rhs: &Self) {
+        *self = self.add(&rhs);
+    }
+
+}
+
+impl Sub for &Unit {
+
+    type Output = Unit;
+
+    fn sub(self, rhs: Self) -> Unit {
+        match self {
+            Unit::Cm(_) => Unit::Cm(round(self.decimal_value() - rhs.cm().decimal_value())),
+            Unit::Pixel(_) => Unit::Pixel(round(self.decimal_value() - rhs.pixel().decimal_value())),
+            Unit::Point(_) => Unit::Point(round(self.decimal_value() - rhs.point().decimal_value())),
+            Unit::Inch(_) => Unit::Inch(round(self.decimal_value() - rhs.inch().decimal_value())),
+            Unit::Mil(_) => Unit::Mil(round(self.decimal_value() - rhs.mil().decimal_value())),
+            Unit::Mm(_) => Unit::Mm(round(self.decimal_value() - rhs.mm().decimal_value())),
+        }
+    }
+
+}
+
+impl SubAssign<&Unit> for Unit {
+
+    fn sub_assign(&mut self, rhs: &Self) {
+        *self = self.sub(&rhs);
+    }
+
+}
+
+impl Mul for &Unit {
+
+    type Output = Unit;
+
+    /// Performs the `*` operation.
+    /// 
+    /// Only the decimal value is used for the `rhs`.  The units are stripped.
+    /// 
+    /// # Example
+    /// assert_eq!(Unit::Inch(Decimal::from(2)) * Unit::Point(Decimal::from(72)), Unit::Inch(Decimal::from(144)))
+    fn mul(self, rhs: Self) -> Unit {
+        match self {
+            Unit::Cm(_) => Unit::Cm(round(self.decimal_value() * rhs.decimal_value())),
+            Unit::Pixel(_) => Unit::Pixel(round(self.decimal_value() * rhs.decimal_value())),
+            Unit::Point(_) => Unit::Point(round(self.decimal_value() * rhs.decimal_value())),
+            Unit::Inch(_) => Unit::Inch(round(self.decimal_value() * rhs.decimal_value())),
+            Unit::Mil(_) => Unit::Mil(round(self.decimal_value() * rhs.decimal_value())),
+            Unit::Mm(_) => Unit::Mm(round(self.decimal_value() * rhs.decimal_value())),
+        }
+    }
+
+}
+
+impl MulAssign<&Unit> for Unit {
+
+    fn mul_assign(&mut self, rhs: &Self) {
+        *self = self.mul(&rhs);
+    }
+
+}
+
+impl Div for &Unit {
+
+    type Output = Unit;
+
+    /// Performs the `/` operation.
+    /// 
+    /// Only the decimal value is used for the `rhs`.  The units are stripped.
+    /// 
+    /// # Example
+    /// assert_eq!(Unit::Inch(Decimal::from(72)) / Unit::Point(Decimal::from(36)), Unit::Inch(Decimal::from(2)))
+    fn div(self, rhs: Self) -> Unit {
+        match self {
+            Unit::Cm(_) => Unit::Cm(round(self.decimal_value() / rhs.decimal_value())),
+            Unit::Pixel(_) => Unit::Pixel(round(self.decimal_value() / rhs.decimal_value())),
+            Unit::Point(_) => Unit::Point(round(self.decimal_value() / rhs.decimal_value())),
+            Unit::Inch(_) => Unit::Inch(round(self.decimal_value() / rhs.decimal_value())),
+            Unit::Mil(_) => Unit::Mil(round(self.decimal_value() / rhs.decimal_value())),
+            Unit::Mm(_) => Unit::Mm(round(self.decimal_value() / rhs.decimal_value())),
+        }
+    }
+
+}
+
+impl DivAssign<&Unit> for Unit {
+
+    fn div_assign(&mut self, rhs: &Self) {
+        *self = self.div(&rhs);
     }
 
 }
@@ -226,6 +340,136 @@ mod tests {
         assert_eq!(Unit::Inch(Decimal::from(1)).mm(), mm);
         assert_eq!(Unit::Mil(Decimal::from(1000)).mm(), mm);
         assert_eq!(Unit::Mm(Decimal::new(254, 1)).mm(), mm);
+    }
+
+    #[test]
+    fn test_add() {
+        let cm = Unit::Cm(Decimal::new(254, 2)); // 1 inch
+        let px = Unit::Pixel(Decimal::from(96)); // 1 inch
+        let pt = Unit::Point(Decimal::from(72)); // 1 inch
+        let inch = Unit::Inch(Decimal::from(1));
+        let mil = Unit::Mil(Decimal::from(1000)); // 1 inch
+        let mm = Unit::Mm(Decimal::new(254, 1)); // 1 inch
+
+        assert_eq!((&inch + &cm), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch + &px), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch + &pt), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch + &inch), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch + &mil), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch + &mm), Unit::Inch(Decimal::from(2)));
+
+        let mut units = UNIT0;
+        units += &cm;
+        assert_eq!(units, Unit::Point(Decimal::from(72 * 1)));
+        units += &px;
+        assert_eq!(units, Unit::Point(Decimal::from(72 * 2)));
+        units += &pt;
+        assert_eq!(units, Unit::Point(Decimal::from(72 * 3)));
+        units += &inch;
+        assert_eq!(units, Unit::Point(Decimal::from(72 * 4)));
+        units += &mil;
+        assert_eq!(units, Unit::Point(Decimal::from(72 * 5)));
+        units += &mm;
+        assert_eq!(units, Unit::Point(Decimal::from(72 * 6)));
+    }
+
+    #[test]
+    fn test_subtract() {
+        let cm = Unit::Cm(Decimal::new(254, 2)); // 1 inch
+        let px = Unit::Pixel(Decimal::from(96)); // 1 inch
+        let pt = Unit::Point(Decimal::from(72)); // 1 inch
+        let inch = Unit::Inch(Decimal::from(1));
+        let mil = Unit::Mil(Decimal::from(1000)); // 1 inch
+        let mm = Unit::Mm(Decimal::new(254, 1)); // 1 inch
+
+        let inch3 = Unit::Inch(Decimal::from(3));
+
+        assert_eq!((&inch3 - &cm), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch3 - &px), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch3 - &pt), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch3 - &inch), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch3 - &mil), Unit::Inch(Decimal::from(2)));
+        assert_eq!((&inch3 - &mm), Unit::Inch(Decimal::from(2)));
+
+        let mut units = UNIT0;
+        units -= &cm;
+        assert_eq!(units, Unit::Point(Decimal::from(-72 * 1)));
+        units -= &px;
+        assert_eq!(units, Unit::Point(Decimal::from(-72 * 2)));
+        units -= &pt;
+        assert_eq!(units, Unit::Point(Decimal::from(-72 * 3)));
+        units -= &inch;
+        assert_eq!(units, Unit::Point(Decimal::from(-72 * 4)));
+        units -= &mil;
+        assert_eq!(units, Unit::Point(Decimal::from(-72 * 5)));
+        units -= &mm;
+        assert_eq!(units, Unit::Point(Decimal::from(-72 * 6)));
+    }
+
+    #[test]
+    fn test_multiply() {
+        let cm = Unit::Cm(Decimal::new(254, 2)); // 1 inch
+        let px = Unit::Pixel(Decimal::from(96)); // 1 inch
+        let pt = Unit::Point(Decimal::from(72)); // 1 inch
+        let inch = Unit::Inch(Decimal::from(1));
+        let mil = Unit::Mil(Decimal::from(1000)); // 1 inch
+        let mm = Unit::Mm(Decimal::new(254, 1)); // 1 inch
+
+        assert_eq!((&inch * &cm), Unit::Inch(Decimal::new(254, 2)));
+        assert_eq!((&inch * &px), Unit::Inch(Decimal::new(96, 0)));
+        assert_eq!((&inch * &pt), Unit::Inch(Decimal::new(72, 0)));
+        assert_eq!((&inch * &inch), Unit::Inch(Decimal::new(1, 0)));
+        assert_eq!((&inch * &mil), Unit::Inch(Decimal::new(1000, 0)));
+        assert_eq!((&inch * &mm), Unit::Inch(Decimal::new(254, 1)));
+
+        let mut units = Unit::from(1);
+        units *= &cm;
+        assert_eq!(units, Unit::from(2.54));
+        units *= &px;
+        assert_eq!(units, Unit::from(243.84));
+        units *= &pt;
+        assert_eq!(units, Unit::from(17556.48));
+        units *= &inch;
+        assert_eq!(units, Unit::from(17556.48));
+        units *= &mil;
+        assert_eq!(units, Unit::from(17556480));
+        units *= &mm;
+        assert_eq!(units, Unit::from(445934592));
+
+        assert_eq!(&Unit::Inch(Decimal::from(2)) * &Unit::Point(Decimal::from(72)), Unit::Inch(Decimal::from(144)))
+    }
+
+    #[test]
+    fn test_divide() {
+        let cm = Unit::Cm(Decimal::new(254, 2)); // 1 inch
+        let px = Unit::Pixel(Decimal::from(96)); // 1 inch
+        let pt = Unit::Point(Decimal::from(72)); // 1 inch
+        let inch = Unit::Inch(Decimal::from(1));
+        let mil = Unit::Mil(Decimal::from(1000)); // 1 inch
+        let mm = Unit::Mm(Decimal::new(254, 1)); // 1 inch
+
+        assert_eq!((&inch / &cm).real_value(), Decimal::new(39370, 5));
+        assert_eq!((&inch / &px).real_value(), Decimal::new(1042, 5));
+        assert_eq!((&inch / &pt).real_value(), Decimal::new(1389, 5));
+        assert_eq!((&inch / &inch).real_value(), Decimal::new(1, 0));
+        assert_eq!((&inch / &mil).real_value(), Decimal::new(1, 3));
+        assert_eq!((&inch / &mm).real_value(), Decimal::new(3937, 5));
+
+        let mut units = Unit::from(6912);
+        units /= &cm;
+        assert_eq!(units.real_value(), Decimal::new(272125984, 5));
+        units /= &px;
+        assert_eq!(units.real_value(), Decimal::new(2834646, 5));
+        units /= &pt;
+        assert_eq!(units.real_value(), Decimal::new(3937, 4));
+        units /= &inch;
+        assert_eq!(units.real_value(), Decimal::new(3937, 4));
+        units /= &mil;
+        assert_eq!(units.real_value(), Decimal::new(39, 5));
+        units /= &mm;
+        assert_eq!(units.real_value(), Decimal::new(2, 5));
+
+        assert_eq!(&Unit::Inch(Decimal::from(72)) / &Unit::Point(Decimal::from(36)), Unit::Inch(Decimal::from(2)))
     }
 
 }
