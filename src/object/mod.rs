@@ -13,8 +13,7 @@ use crate::catalog::Catalog;
 use crate::cross_reference::CrossReferenceTable;
 use crate::document::Document;
 use crate::information::DocInfo;
-use crate::page::Page;
-use crate::pages::Pages;
+use crate::page::{Page, Pages};
 
 /// Object types.
 #[derive(Debug, Clone, PartialEq)]

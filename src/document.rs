@@ -9,7 +9,7 @@ use crate::information::DocInfo;
 use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
 use crate::helpers::write_all_count;
-use crate::pages::Pages;
+use crate::page::Pages;
 use crate::pdf_object::PdfObject;
 
 /// The pdf document.

@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 use super::{Object, IndirectObject, ObjectType, object_id::ObjectId};
-use crate::pages::Pages;
+use crate::page::Pages;
 
 /// Holds all indirect (referenced) objects to be included in a pdf document.
 #[derive(Debug, Clone, PartialEq)]
