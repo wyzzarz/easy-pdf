@@ -11,11 +11,23 @@ use std::collections::HashMap;
 use crate::geometry::{PaperSize, Rect};
 use crate::pdf_object::PdfObject;
 
+/// Page rotation.
+#[derive(Debug, Default, Clone, PartialEq)]
+pub enum Rotation {
+    #[default]
+    R0 = 0,
+    R90 = 90,
+    R180 = 180,
+    R270 = 270,
+}
+
 /// Inherited page attributes that can be applied to `Page` and `Pages`.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct InheritedPageAttributes {
     /// Physical paper size.
     media_box: Option<PaperSize>,
+    /// Rotation.  A multiple of 90 degrees (0, 1, 2, 3).
+    rotation: Option<Rotation>,
 }
 
 impl InheritedPageAttributes {
@@ -30,6 +42,16 @@ impl InheritedPageAttributes {
         self.media_box = media_box;
     }
 
+    /// Gets the page rotation.
+    pub fn rotation(&self) -> Option<Rotation> {
+        self.rotation.clone()
+    }
+
+    /// Sets the page rotation.
+    pub fn set_rotation(&mut self, rotation: Option<Rotation>) {
+        self.rotation = rotation;
+    }
+
     /// Adds inherited properties to the dict.
     pub fn extend(&self, dict: &mut HashMap<String, PdfObject>) -> Result<(), Box<dyn std::error::Error>> {
         // add media box
@@ -37,6 +59,13 @@ impl InheritedPageAttributes {
             dict.insert(
                 "MediaBox".to_string(), 
                 PdfObject::from(Rect::from(media_box)))
+        );
+
+        // add rotation
+        self.rotation.clone().and_then(|rotation| 
+            dict.insert(
+                "Rotate".to_string(), 
+                PdfObject::from(rotation as isize))
         );
 
         Ok(())

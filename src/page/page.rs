@@ -84,6 +84,7 @@ mod tests {
     use super::*;
     use crate::cross_reference::CrossReferenceTable;
     use crate::geometry::PaperSize;
+    use crate::page::Rotation;
 
     #[test]
     fn test_from_object() {
@@ -101,12 +102,13 @@ mod tests {
         let id = ObjectId::new(10, 2);
         let mut page = Page::new(id);
         page.inherited.set_media_box(Some(PaperSize::Tabloid));
+        page.inherited.set_rotation(Some(Rotation::R90));
         let mut writer: Vec<u8> = Vec::new();
         let mut xref = &mut CrossReferenceTable::new();
         assert!(page.render(0, parent_id, &mut writer, &mut xref).is_ok());
         let results = String::from_utf8(writer).unwrap();
         assert_eq!(results, r#"10 2 obj
-<< /MediaBox [0 0 792 1224] /Parent 3 1 R /Type /Page >>
+<< /MediaBox [0 0 792 1224] /Parent 3 1 R /Rotate 90 /Type /Page >>
 endobj
 "#);
     }
