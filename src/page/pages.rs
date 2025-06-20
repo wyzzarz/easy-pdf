@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use maplit::hashmap;
+use super::InheritedPageAttributes;
 use crate::cross_reference::CrossReferenceTable;
 use crate::object::documents::{self, DocumentId};
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
@@ -14,6 +15,7 @@ pub struct Pages {
     id: ObjectId,
     kids: Vec<ObjectId>,
     count: usize,
+    pub inherited: InheritedPageAttributes,
 }
 
 impl IndirectObject for Pages {
@@ -23,6 +25,7 @@ impl IndirectObject for Pages {
             id,
             kids: Vec::new(),
             count: 0,
+            inherited: InheritedPageAttributes::default(),
         }
     }
 
@@ -47,7 +50,7 @@ impl IndirectObject for Pages {
         xref.add_bytes(write_all_count(writer, b"\n")?);
 
         // write dictionary
-        let obj = PdfObject::Dictionary(hashmap! {
+        let mut dict = hashmap! {
             "Type".to_string() => PdfObject::Name(self.get_type().to_string()),
             "Kids".to_string() => PdfObject::Array(
                 self.kids.iter()
@@ -55,7 +58,9 @@ impl IndirectObject for Pages {
                     .collect::<Vec<PdfObject>>()
             ),
             "Count".to_string() => PdfObject::from(self.count),
-        });
+        };
+        self.inherited.extend(&mut dict)?;
+        let obj = PdfObject::Dictionary(dict);
         xref.add_bytes(obj.render(writer)?);
 
         // end object
@@ -69,6 +74,10 @@ impl IndirectObject for Pages {
 
         Ok(())
     }
+
+}
+
+impl InheritedPageAttributes {
 
 }
 
