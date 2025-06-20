@@ -135,7 +135,7 @@ mod tests {
     use super::*;
     use crate::geometry::PaperSize;
     use crate::object::{Object, documents};
-    use crate::page::Page;
+    use crate::page::{Page, Rotation};
     use crate::resources;
 
     #[test]
@@ -169,6 +169,7 @@ mod tests {
             let new_id = objects.new_object_id();
             let mut page = Page::new(new_id);
             page.inherited.set_media_box(Some(PaperSize::Tabloid));
+            page.inherited.set_rotation(Some(Rotation::R90));
             objects.insert(Object::Page(page.clone()));
 
             // add page to (parent) page_tree
