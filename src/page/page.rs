@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use maplit::hashmap;
+use super::InheritedPageAttributes;
 use crate::cross_reference::CrossReferenceTable;
 use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
@@ -12,13 +13,15 @@ use crate::helpers::write_all_count;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Page {
     id: ObjectId,
+    pub inherited: InheritedPageAttributes,
 }
 
 impl IndirectObject for Page {
 
     fn new(id: ObjectId) -> Self {
         Self {
-            id,
+            id: id,
+            inherited: InheritedPageAttributes::default(),
         }
     }
 
@@ -43,10 +46,12 @@ impl IndirectObject for Page {
         xref.add_bytes(write_all_count(writer, b"\n")?);
 
         // write dictionary
-        let obj = PdfObject::Dictionary(hashmap! {
+        let mut dict = hashmap! {
             "Type".to_string() => PdfObject::Name(self.get_type().to_string()),
             "Parent".to_string() => PdfObject::Raw(parent.to_string_ref().into()),
-        });
+        };
+        self.inherited.extend(&mut dict)?;
+        let obj = PdfObject::Dictionary(dict);
         xref.add_bytes(obj.render(writer)?);
 
         // end object
@@ -77,6 +82,8 @@ impl Page {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cross_reference::CrossReferenceTable;
+    use crate::geometry::PaperSize;
 
     #[test]
     fn test_from_object() {
@@ -86,6 +93,22 @@ mod tests {
         let page1 = Page::try_from(object.clone()).unwrap();
         assert_eq!(page, page1);
         assert_eq!(page1.id, id);
+    }
+
+    #[test]
+    fn test_render() {
+        let parent_id = ObjectId::new(3, 1);
+        let id = ObjectId::new(10, 2);
+        let mut page = Page::new(id);
+        page.inherited.set_media_box(Some(PaperSize::Tabloid));
+        let mut writer: Vec<u8> = Vec::new();
+        let mut xref = &mut CrossReferenceTable::new();
+        assert!(page.render(0, parent_id, &mut writer, &mut xref).is_ok());
+        let results = String::from_utf8(writer).unwrap();
+        assert_eq!(results, r#"10 2 obj
+<< /MediaBox [0 0 792 1224] /Parent 3 1 R /Type /Page >>
+endobj
+"#);
     }
 
 }
