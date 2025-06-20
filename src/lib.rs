@@ -46,7 +46,6 @@ pub mod helpers;
 pub mod information;
 pub mod object;
 pub mod page;
-pub mod pages;
 pub mod pdf_object;
 pub mod resources;
 

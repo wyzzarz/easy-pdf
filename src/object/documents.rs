@@ -9,7 +9,7 @@ use super::objects::Objects;
 use crate::catalog::Catalog;
 use crate::document::Document;
 use crate::information::DocInfo;
-use crate::pages::Pages;
+use crate::page::Pages;
 
 /// Document identifier.
 pub type DocumentId = u16;
