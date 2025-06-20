@@ -133,6 +133,7 @@ mod tests {
     use chrono::prelude::*;
     use tempfile::NamedTempFile;
     use super::*;
+    use crate::geometry::PaperSize;
     use crate::object::{Object, documents};
     use crate::page::Page;
     use crate::resources;
@@ -166,7 +167,8 @@ mod tests {
         assert!(documents::mutate(doc_id, |objects| {
             // add a new page
             let new_id = objects.new_object_id();
-            let page = Page::new(new_id);
+            let mut page = Page::new(new_id);
+            page.inherited.set_media_box(Some(PaperSize::Tabloid));
             objects.insert(Object::Page(page.clone()));
 
             // add page to (parent) page_tree
