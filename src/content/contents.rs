@@ -3,7 +3,11 @@
 
 use rand::Rng;
 use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex};
 use super::{Content, ContentId};
+
+/// Holds an instance of all contents.
+pub static CONTENTS: LazyLock<Mutex<Contents>> = LazyLock::new(|| Mutex::new(Contents::new()));
 
 /// Holds content objects.
 #[derive(Debug, Clone, PartialEq)]
