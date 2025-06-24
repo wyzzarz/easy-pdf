@@ -7,7 +7,7 @@ use std::sync::{LazyLock, Mutex};
 use super::{Content, ContentId};
 
 /// Holds an instance of all contents.
-pub static CONTENTS: LazyLock<Mutex<Contents>> = LazyLock::new(|| Mutex::new(Contents::new()));
+pub(crate) static CONTENTS: LazyLock<Mutex<Contents>> = LazyLock::new(|| Mutex::new(Contents::new()));
 
 /// Holds content objects.
 #[derive(Debug, Clone, PartialEq)]
@@ -18,14 +18,14 @@ pub struct Contents {
 impl Contents {
 
     /// Creates a new instance.
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             contents: HashMap::new(),
         }
     }
 
     /// Generates a new content id.
-    pub fn new_content_id(&self) -> ContentId {
+    fn new_content_id(&self) -> ContentId {
         // start a new number generator
         let mut rng = rand::rng();
 
@@ -38,6 +38,11 @@ impl Contents {
         }
     }
 
+}
+
+/// Generates a new content id.
+pub fn new_content_id() -> ContentId {
+    CONTENTS.lock().unwrap().new_content_id()
 }
 
 #[cfg(test)]
