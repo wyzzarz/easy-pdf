@@ -6,6 +6,9 @@ pub mod frame;
 pub use frame::Frame;
 use crate::geometry::{POINT0, Point, Rect, Unit};
 
+/// Content identifier.
+pub type ContentId = u32;
+
 /// Content that can be layed out across one or more `Page` objects and rendered.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Content {
@@ -17,7 +20,10 @@ pub enum Content {
 pub trait Layout {
         
     /// Creates a new instance.
-    fn new(frame: Rect) -> Self where Self: Sized;
+    fn new(id: ContentId, frame: Rect) -> Self where Self: Sized;
+
+    /// Gets the content id.
+    fn get_id(&self) -> ContentId;
 
     /// The location and size of the content with respect to its parent.
     fn frame(&self) -> Rect;
@@ -62,8 +68,14 @@ pub trait Layout {
 
 impl Layout for Content {
 
-    fn new(frame: Rect) -> Self {
-        Content::Frame(Frame::new(frame))
+    fn new(id: ContentId, frame: Rect) -> Self {
+        Content::Frame(Frame::new(id, frame))
+    }
+
+    fn get_id(&self) -> ContentId {
+        match self {
+            Content::Frame(frame) => frame.get_id(),
+        }
     }
 
     fn frame(&self) -> Rect {
@@ -86,7 +98,7 @@ mod tests {
 
     #[test]
     fn test_set_bounds() {
-       let mut content = Frame::new(Rect::from((10, 20, 300, 4000)));
+       let mut content = Frame::new(123, Rect::from((10, 20, 300, 4000)));
        assert_eq!(content.bounds(), Rect::from((0, 0, 300, 4000)));
        content.set_bounds(Rect::from((100, 200, 400, 5000)));
        assert_eq!(content.bounds(), Rect::from((0, 0, 400, 5000)));
@@ -95,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_set_center() {
-       let mut content = Frame::new(Rect::from((10, 20, 300, 4000)));
+       let mut content = Frame::new(123, Rect::from((10, 20, 300, 4000)));
        assert_eq!(content.center(), Point::from((160, 2020)));
        content.set_center(Point::from((100, 200)));
        assert_eq!(content.frame(), Rect::from((-50, -1800, 300, 4000)));
