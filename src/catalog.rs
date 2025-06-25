@@ -3,7 +3,7 @@
 
 use maplit::hashmap;
 use crate::cross_reference::CrossReferenceTable;
-use crate::object::documents::{self, DocumentId};
+use crate::object::{DocumentId, document::documents};
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
 use crate::pdf_object::PdfObject;
 use crate::helpers::write_all_count;
@@ -123,7 +123,7 @@ impl Catalog {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::Document;
+    use crate::object::Document;
 
     #[test]
     fn test_from_object() {

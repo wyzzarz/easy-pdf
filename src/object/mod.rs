@@ -1,18 +1,16 @@
 // SPDX-FileCopyrightText: 2025 Warner Zee <warner@zoynk.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-pub mod documents;
+pub mod document;
 pub mod object_id;
 pub mod objects;
 
 use std::fmt;
 use std::str::FromStr;
-pub use documents::DocumentId;
+pub use document::{Document, DocumentId, DocInfo};
 pub use object_id::ObjectId;
 use crate::catalog::Catalog;
 use crate::cross_reference::CrossReferenceTable;
-use crate::document::Document;
-use crate::information::DocInfo;
 use crate::page::{Page, Pages};
 
 /// Object types.

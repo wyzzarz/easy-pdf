@@ -3,10 +3,9 @@
 
 use maplit::hashmap;
 use std::path::Path;
+use super::{DocumentId, DocInfo};
 use crate::catalog::Catalog;
 use crate::cross_reference::CrossReferenceTable;
-use crate::information::DocInfo;
-use crate::object::documents::DocumentId;
 use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
 use crate::helpers::write_all_count;
 use crate::page::Pages;
@@ -134,7 +133,7 @@ mod tests {
     use tempfile::NamedTempFile;
     use super::*;
     use crate::geometry::PaperSize;
-    use crate::object::{Object, documents};
+    use crate::object::{Object, document::documents};
     use crate::page::{Page, Rotation};
     use crate::resources;
 

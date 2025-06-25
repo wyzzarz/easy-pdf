@@ -4,11 +4,9 @@
 use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
-use super::{IndirectObject, Object, ObjectId, ObjectType};
-use super::objects::Objects;
+use super::{Document, DocInfo};
 use crate::catalog::Catalog;
-use crate::document::Document;
-use crate::information::DocInfo;
+use crate::object::{IndirectObject, Object, ObjectId, ObjectType, objects::Objects};
 use crate::page::Pages;
 
 /// Document identifier.
