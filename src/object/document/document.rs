@@ -4,9 +4,9 @@
 use maplit::hashmap;
 use std::path::Path;
 use super::{DocumentId, DocInfo};
-use crate::cross_reference::CrossReferenceTable;
 use crate::object::{
     Catalog,
+    CrossReferenceTable,
     IndirectObject, Object, ObjectId, ObjectType
 };
 use crate::helpers::write_all_count;

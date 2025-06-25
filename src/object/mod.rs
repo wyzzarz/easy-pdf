@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 pub mod catalog;
+pub mod cross_reference;
 pub mod document;
 pub mod object_id;
 pub mod objects;
@@ -9,9 +10,9 @@ pub mod objects;
 use std::fmt;
 use std::str::FromStr;
 pub use catalog::Catalog;
+pub use cross_reference::CrossReferenceTable;
 pub use document::{Document, DocumentId, DocInfo};
 pub use object_id::ObjectId;
-use crate::cross_reference::CrossReferenceTable;
 use crate::page::{Page, Pages};
 
 /// Object types.

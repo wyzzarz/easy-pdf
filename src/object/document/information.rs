@@ -4,9 +4,11 @@
 use chrono::prelude::*;
 use std::collections::HashMap;
 use super::{DocumentId, documents};
-use crate::cross_reference::CrossReferenceTable;
 use crate::helpers::get_lib_name;
-use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
+use crate::object::{
+    CrossReferenceTable,
+    IndirectObject, Object, ObjectId, ObjectType
+};
 use crate::pdf_object::PdfObject;
 use crate::helpers::write_all_count;
 

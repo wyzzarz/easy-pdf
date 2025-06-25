@@ -3,9 +3,11 @@
 
 use maplit::hashmap;
 use super::InheritedPageAttributes;
-use crate::cross_reference::CrossReferenceTable;
 use crate::object::DocumentId;
-use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
+use crate::object::{
+    CrossReferenceTable,
+    IndirectObject, Object, ObjectId, ObjectType
+};
 use crate::pdf_object::PdfObject;
 use crate::helpers::write_all_count;
 
@@ -82,8 +84,8 @@ impl Page {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cross_reference::CrossReferenceTable;
     use crate::geometry::PaperSize;
+    use crate::object::CrossReferenceTable;
     use crate::page::Rotation;
 
     #[test]

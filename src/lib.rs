@@ -38,7 +38,6 @@ $ cargo run --example easy-pdf-rs-example
 
 */
 
-pub mod cross_reference;
 pub mod geometry;
 pub mod helpers;
 pub mod object;

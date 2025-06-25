@@ -3,9 +3,11 @@
 
 use maplit::hashmap;
 use super::InheritedPageAttributes;
-use crate::cross_reference::CrossReferenceTable;
-use crate::object::{DocumentId, document::documents};
-use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
+use crate::object::{
+    CrossReferenceTable,
+    DocumentId, document::documents,
+    IndirectObject, Object, ObjectId, ObjectType
+};
 use crate::pdf_object::PdfObject;
 use crate::helpers::write_all_count;
 
