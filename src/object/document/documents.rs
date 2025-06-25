@@ -5,8 +5,10 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 use super::{Document, DocInfo};
-use crate::catalog::Catalog;
-use crate::object::{IndirectObject, Object, ObjectId, ObjectType, objects::Objects};
+use crate::object::{
+    Catalog,
+    IndirectObject, Object, ObjectId, ObjectType, objects::Objects
+};
 use crate::page::Pages;
 
 /// Document identifier.
@@ -134,8 +136,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::Catalog;
-    use crate::object::IndirectObject;
+    use crate::object::{Catalog, IndirectObject};
 
     #[test]
     fn test_new_document_id() {

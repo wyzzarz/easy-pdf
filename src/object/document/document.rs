@@ -4,9 +4,11 @@
 use maplit::hashmap;
 use std::path::Path;
 use super::{DocumentId, DocInfo};
-use crate::catalog::Catalog;
 use crate::cross_reference::CrossReferenceTable;
-use crate::object::{IndirectObject, Object, ObjectId, ObjectType};
+use crate::object::{
+    Catalog,
+    IndirectObject, Object, ObjectId, ObjectType
+};
 use crate::helpers::write_all_count;
 use crate::page::Pages;
 use crate::pdf_object::PdfObject;

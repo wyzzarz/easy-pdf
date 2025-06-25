@@ -80,7 +80,7 @@ impl Objects {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::Catalog;
+    use crate::object::Catalog;
 
     #[test]
     fn test_objects() {
