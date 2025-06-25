@@ -41,7 +41,6 @@ $ cargo run --example easy-pdf-rs-example
 pub mod geometry;
 pub mod helpers;
 pub mod object;
-pub mod page;
 pub mod pdf_object;
 pub mod resources;
 

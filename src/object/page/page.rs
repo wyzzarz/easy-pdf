@@ -85,8 +85,7 @@ impl Page {
 mod tests {
     use super::*;
     use crate::geometry::PaperSize;
-    use crate::object::CrossReferenceTable;
-    use crate::page::Rotation;
+    use crate::object::{CrossReferenceTable, PageRotation};
 
     #[test]
     fn test_from_object() {
@@ -104,7 +103,7 @@ mod tests {
         let id = ObjectId::new(10, 2);
         let mut page = Page::new(id);
         page.inherited.set_media_box(Some(PaperSize::Tabloid));
-        page.inherited.set_rotation(Some(Rotation::R90));
+        page.inherited.set_rotation(Some(PageRotation::R90));
         let mut writer: Vec<u8> = Vec::new();
         let mut xref = &mut CrossReferenceTable::new();
         assert!(page.render(0, parent_id, &mut writer, &mut xref).is_ok());

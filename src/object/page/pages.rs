@@ -135,7 +135,7 @@ impl Pages {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::page::Page;
+    use crate::object::Page;
 
     #[test]
     fn test_from_object() {

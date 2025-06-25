@@ -6,6 +6,7 @@ pub mod cross_reference;
 pub mod document;
 pub mod object_id;
 pub mod objects;
+pub mod page;
 
 use std::fmt;
 use std::str::FromStr;
@@ -13,7 +14,7 @@ pub use catalog::Catalog;
 pub use cross_reference::CrossReferenceTable;
 pub use document::{Document, DocumentId, DocInfo};
 pub use object_id::ObjectId;
-use crate::page::{Page, Pages};
+pub use page::{Page, Pages, PageRotation};
 
 /// Object types.
 #[derive(Debug, Clone, PartialEq)]

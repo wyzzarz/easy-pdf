@@ -13,7 +13,7 @@ use crate::pdf_object::PdfObject;
 
 /// Page rotation.
 #[derive(Debug, Default, Clone, PartialEq)]
-pub enum Rotation {
+pub enum PageRotation {
     #[default]
     R0 = 0,
     R90 = 90,
@@ -27,7 +27,7 @@ pub struct InheritedPageAttributes {
     /// Physical paper size.
     media_box: Option<PaperSize>,
     /// Rotation.  A multiple of 90 degrees (0, 1, 2, 3).
-    rotation: Option<Rotation>,
+    rotation: Option<PageRotation>,
 }
 
 impl InheritedPageAttributes {
@@ -43,12 +43,12 @@ impl InheritedPageAttributes {
     }
 
     /// Gets the page rotation.
-    pub fn rotation(&self) -> Option<Rotation> {
+    pub fn rotation(&self) -> Option<PageRotation> {
         self.rotation.clone()
     }
 
     /// Sets the page rotation.
-    pub fn set_rotation(&mut self, rotation: Option<Rotation>) {
+    pub fn set_rotation(&mut self, rotation: Option<PageRotation>) {
         self.rotation = rotation;
     }
 

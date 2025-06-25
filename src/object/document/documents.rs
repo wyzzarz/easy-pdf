@@ -7,9 +7,9 @@ use std::sync::{LazyLock, Mutex};
 use super::{Document, DocInfo};
 use crate::object::{
     Catalog,
-    IndirectObject, Object, ObjectId, ObjectType, objects::Objects
+    IndirectObject, Object, ObjectId, ObjectType, objects::Objects,
+    Pages,
 };
-use crate::page::Pages;
 
 /// Document identifier.
 pub type DocumentId = u16;

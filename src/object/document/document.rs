@@ -7,10 +7,10 @@ use super::{DocumentId, DocInfo};
 use crate::object::{
     Catalog,
     CrossReferenceTable,
-    IndirectObject, Object, ObjectId, ObjectType
+    IndirectObject, Object, ObjectId, ObjectType,
+    Pages,
 };
 use crate::helpers::write_all_count;
-use crate::page::Pages;
 use crate::pdf_object::PdfObject;
 
 /// The pdf document.
@@ -135,8 +135,11 @@ mod tests {
     use tempfile::NamedTempFile;
     use super::*;
     use crate::geometry::PaperSize;
-    use crate::object::{Object, document::documents};
-    use crate::page::{Page, Rotation};
+    use crate::object::{
+        document::documents,
+        Object,
+        Page, PageRotation,
+    };
     use crate::resources;
 
     #[test]
@@ -170,7 +173,7 @@ mod tests {
             let new_id = objects.new_object_id();
             let mut page = Page::new(new_id);
             page.inherited.set_media_box(Some(PaperSize::Tabloid));
-            page.inherited.set_rotation(Some(Rotation::R90));
+            page.inherited.set_rotation(Some(PageRotation::R90));
             objects.insert(Object::Page(page.clone()));
 
             // add page to (parent) page_tree
